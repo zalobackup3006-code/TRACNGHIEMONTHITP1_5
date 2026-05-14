@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thử Thách Tiếng Anh Tương Tác</title>
+    <!-- Sử dụng Font chữ Nunito bo tròn, nét đậm cực kỳ dễ đọc cho trẻ em -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ================= BIẾN MÀU SẮC & UI ================= */
+        :root {
+            --primary: #4e54c8;
+            --primary-light: #8f94fb;
+            --secondary: #ff9f43;
+            --success: #1dd1a1;
+            --danger: #ff6b6b;
+            --bg-body: #f1f2f6;
+            --bg-card: #ffffff;
+            --text-dark: #2f3542;
+            --text-muted: #747d8c;
+            --radius: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Nunito', sans-serif; }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* ================= KHUNG ỨNG DỤNG CHÍNH ================= */
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: none; /* Ẩn đi chờ kích hoạt */
+            flex-direction: column;
+            min-height: 80vh;
+        }
+        .active-screen { display: flex; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ================= MÀN HÌNH KHỞI ĐẦU ================= */
+        #welcome-screen { padding: 50px 20px; text-align: center; justify-content: center; align-items: center; }
+        .mascot { font-size: 80px; margin-bottom: 10px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        
+        #welcome-screen h1 { font-size: 2.5rem; color: var(--primary); font-weight: 900; margin-bottom: 10px; }
+        #welcome-screen p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px; font-weight: 700; }
+        
+        .name-input {
+            width: 100%; max-width: 400px; padding: 18px 20px; font-size: 1.3rem; font-weight: 800;
+            border: 4px solid #dfe4ea; border-radius: 15px; text-align: center; color: var(--primary);
+            outline: none; transition: 0.3s; margin-bottom: 25px;
+        }
+        .name-input:focus { border-color: var(--secondary); box-shadow: 0 0 15px rgba(255, 159, 67, 0.3); }
+
+        .btn {
+            padding: 16px 35px; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 15px;
+            cursor: pointer; transition: all 0.2s; color: #fff; text-transform: uppercase;
+        }
+        .btn-start { background: var(--secondary); box-shadow: 0 8px 0 #d35400; }
+        .btn-start:hover { transform: translateY(4px); box-shadow: 0 4px 0 #d35400; }
+        .btn-submit { background: var(--primary); box-shadow: 0 8px 0 #373b8e; margin-top: 20px; width: 100%; max-width: 300px; }
+        .btn-submit:hover { transform: translateY(4px); box-shadow: 0 4px 0 #373b8e; }
+
+        /* ================= MÀN HÌNH BÀI TẬP ================= */
+        .app-header {
+            background: #f1f2f6; padding: 15px 25px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 3px solid #dfe4ea; flex-wrap: wrap; gap: 15px;
+        }
+        .student-badge { font-weight: 800; font-size: 1.1rem; color: var(--primary); background: #dfe4ea; padding: 8px 15px; border-radius: 10px; }
+        
+        .progress-box { flex-grow: 1; max-width: 350px; text-align: center; }
+        .progress-text { font-weight: 800; font-size: 1rem; color: var(--text-dark); margin-bottom: 5px; }
+        .progress-bar-bg { background: #dfe4ea; height: 12px; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.4s ease; }
+        
+        .nav-dropdown {
+            padding: 10px; font-size: 1rem; font-weight: 800; border: 3px solid var(--primary);
+            border-radius: 10px; outline: none; cursor: pointer; color: var(--text-dark);
+        }
+
+        .question-area { padding: 30px 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .task-label {
+            display: inline-block; background: #ffeaa7; color: #d63031; padding: 8px 15px;
+            border-radius: 10px; font-weight: 900; font-size: 1.1rem; margin-bottom: 15px; align-self: flex-start;
+        }
+        .question-text { font-size: 1.6rem; font-weight: 900; color: var(--text-dark); line-height: 1.5; margin-bottom: 25px; }
+
+        /* Dạng bài Trắc nghiệm (MCQ) */
+        .mcq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .mcq-opt {
+            background: #ffffff; border: 3px solid #ced6e0; padding: 20px 15px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 800; color: var(--text-dark); cursor: pointer;
+            text-align: left; transition: 0.2s;
+        }
+        .mcq-opt:hover { border-color: var(--primary-light); background: #f8f9fa; }
+        .mcq-opt.selected { border-color: var(--primary); background: #e0e7ff; box-shadow: 0 4px 15px rgba(78, 84, 200, 0.2); }
+
+        /* Dạng bài Sắp xếp từ (Reorder) - Touch Friendly */
+        .reorder-container { display: flex; flex-direction: column; gap: 20px; }
+        .reorder-zone {
+            background: #f1f2f6; min-height: 80px; border: 3px dashed #a4b0be; border-radius: 15px;
+            padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+        }
+        .word-pool { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .word-chip {
+            background: var(--bg-card); border: 2px solid var(--primary); color: var(--primary);
+            padding: 12px 18px; font-size: 1.3rem; font-weight: 800; border-radius: 12px;
+            cursor: pointer; box-shadow: 0 4px 0 var(--primary); transition: 0.1s; user-select: none;
+        }
+        .word-chip:active { transform: translateY(4px); box-shadow: 0 0 0 var(--primary); }
+
+        .action-area { padding: 20px; text-align: center; border-top: 2px solid #f1f2f6; }
+
+        /* ================= POPUP PHẢN HỒI ================= */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(3px);
+        }
+        .popup {
+            background: #fff; width: 90%; max-width: 450px; border-radius: 25px; padding: 30px;
+            text-align: center; animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes zoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .popup-icon { font-size: 4.5rem; margin-bottom: 10px; }
+        .popup-title { font-size: 2rem; font-weight: 900; margin-bottom: 15px; }
+        .popup-desc {
+            font-size: 1.15rem; font-weight: 700; color: #57606f; line-height: 1.5;
+            background: #f1f2f6; padding: 15px; border-radius: 15px; margin-bottom: 25px; text-align: left;
+        }
+        
+        .popup.correct { border: 6px solid var(--success); }
+        .popup.correct .popup-title { color: var(--success); }
+        .popup.incorrect { border: 6px solid var(--danger); }
+        .popup.incorrect .popup-title { color: var(--danger); }
+        
+        .btn-popup { padding: 14px 30px; font-size: 1.2rem; background: var(--text-dark); box-shadow: 0 6px 0 #1e272e; width: 100%; }
+        .btn-popup:hover { transform: translateY(4px); box-shadow: 0 2px 0 #1e272e; }
+
+        /* ================= MÀN HÌNH BÁO CÁO ================= */
+        #report-screen { padding: 30px; text-align: center; }
+        #report-screen h2 { color: var(--primary); font-size: 2.2rem; font-weight: 900; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: #f1f2f6; padding: 20px 10px; border-radius: 15px; }
+        .stat-card h3 { font-size: 2.5rem; font-weight: 900; margin-bottom: 5px; }
+        .stat-card p { font-size: 1rem; font-weight: 800; color: var(--text-muted); }
+        
+        .table-wrapper { overflow-x: auto; max-height: 400px; border-radius: 15px; border: 2px solid #dfe4ea; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: var(--primary); color: #fff; padding: 15px; position: sticky; top: 0; font-weight: 800; font-size: 1.1rem;}
+        td { padding: 15px; border-bottom: 1px solid #dfe4ea; font-size: 1.1rem; font-weight: 600; color: var(--text-dark); }
+        tr:nth-child(even) { background: #f8f9fa; }
+
+        @media (max-width: 600px) {
+            .mcq-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .question-text { font-size: 1.3rem; }
+            .app-header { flex-direction: column; }
+            .progress-box { max-width: 100%; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MÀN HÌNH KHỞI ĐẦU -->
+    <div class="app-container active-screen" id="welcome-screen">
+        <div class="mascot">🦉</div>
+        <h1>Đấu Trường Tiếng Anh</h1>
+        <p>Thử thách bản thân qua 5 Đề Thi. Hoàn thành để nhận bảng điểm nhé!</p>
+        <input type="text" id="studentName" class="name-input" placeholder="Nhập tên của em vào đây..." autocomplete="off">
+        <button class="btn btn-start" onclick="startApp()">VÀO THI NGAY!</button>
+    </div>
+
+    <!-- MÀN HÌNH LÀM BÀI -->
+    <div class="app-container" id="quiz-screen">
+        <div class="app-header">
+            <div class="student-badge">👤 <span id="display-name"></span></div>
+            <div class="progress-box">
+                <div class="progress-text">Tiến độ: <span id="progress-text-val">0/0</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
+            </div>
+            <select class="nav-dropdown" id="question-nav" onchange="jumpToQuestion()"></select>
+        </div>
+
+        <div class="question-area">
+            <div class="task-label" id="q-task">SAMPLE X - Task Y</div>
+            <div class="question-text" id="q-text">Nội dung câu hỏi sẽ hiển thị ở đây.</div>
+            <div id="interactive-zone">
+                <!-- Nút MCQ hoặc khối chữ Reorder render tại đây -->
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button class="btn btn-submit" id="btn-check" onclick="checkAnswer()">KIỂM TRA 🎯</button>
+            <button class="btn btn-start" id="btn-report" style="display:none; width:100%; max-width: 300px;" onclick="showReport()">XEM BẢNG ĐIỂM 📊</button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH BÁO CÁO -->
+    <div class="app-container" id="report-screen">
+        <h2>BÁO CÁO KẾT QUẢ</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 style="color: var(--primary);" id="stat-total">0</h3>
+                <p>Tổng số câu</p>
+            </div>
+            <div class="stat-card">
+                <h3 style="color: var(--success);" id="stat-perfect">0</h3>
+                <p>Đúng ngay lần 1</p>
+            </div>
+            <div class="stat-card">
+                <h3 style="color: var(--danger);" id="stat-redo">0</h3>
+                <p>Cần xem lại</p>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>Câu hỏi</th><th>Đáp án sai của em</th><th>Đáp án chuẩn</th></tr></thead>
+                <tbody id="report-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- POPUP OVERLAY -->
+    <div class="overlay" id="popup-overlay">
+        <div class="popup" id="popup-card">
+            <div class="popup-icon" id="popup-icon">✅</div>
+            <div class="popup-title" id="popup-title">Chính xác!</div>
+            <div class="popup-desc" id="popup-desc">Giải thích...</div>
+            <button class="btn btn-popup" onclick="closePopup()">Tiếp tục ⏭️</button>
+        </div>
+    </div>
+
+<script>
+/**
+ * DỮ LIỆU CÂU HỎI (Đã gỡ bỏ toàn bộ dấu chấm, phẩy, hỏi chấm gây nhiễu + Cấp đủ từ bị thiếu)
+ */
+const rawData = [
+    // ================== BÀI TẬP SỐ 1 ==================
+    [1, "Task 1. Odd one out.", "mcq", "A. city B. town C. flat D. province", "C", "Flat (căn hộ) chỉ nơi ở cụ thể, các từ còn lại chỉ đơn vị hành chính/khu vực.", "A. city|B. town|C. flat|D. province"],
+    [1, "Task 1. Odd one out.", "mcq", "A. house B. far C. near D. modern", "A", "House là Danh từ, các từ còn lại là Tính từ.", "A. house|B. far|C. near|D. modern"],
+    [1, "Task 1. Odd one out.", "mcq", "A. small B. quiet C. noisy D. like", "D", "Like là Động từ, các từ còn lại là Tính từ miêu tả.", "A. small|B. quiet|C. noisy|D. like"],
+    [1, "Task 1. Odd one out.", "mcq", "A. can B. jump C. skip D. dance", "A", "Can là Động từ khuyết thiếu, còn lại là Động từ hành động thể chất.", "A. can|B. jump|C. skip|D. dance"],
+    [1, "Task 1. Odd one out.", "mcq", "A. exciting B. boring C. relaxed D. tiring", "C", "Relaxed là tính từ đuôi -ed (chỉ cảm xúc), còn lại là đuôi -ing (chỉ tính chất sự vật).", "A. exciting|B. boring|C. relaxed|D. tiring"],
+    [1, "Task 1. Odd one out.", "mcq", "A. geography B. country C. history D. ethics", "B", "Country (đất nước) không phải là môn học, còn lại là tên các môn học.", "A. geography|B. country|C. history|D. ethics"],
+    [1, "Task 2. Pronunciation.", "mcq", "A. windy B. sunny C. fly D. rainy", "C", "Chữ 'y' trong fly đọc là /aɪ/, còn lại đọc là /i/.", "A. windy|B. sunny|C. fly|D. rainy"],
+    [1, "Task 2. Pronunciation.", "mcq", "A. weather B. cream C. health D. headache", "B", "Chữ 'ea' trong cream đọc là /i:/, còn lại đọc là /e/.", "A. weather|B. cream|C. health|D. headache"],
+    [1, "Task 2. Pronunciation.", "mcq", "A. mouth B. cloud C. about D. your", "D", "Chữ 'ou' trong your đọc là /ɔ:/, còn lại đọc là /aʊ/.", "A. mouth|B. cloud|C. about|D. your"],
+    [1, "Task 2. Pronunciation.", "mcq", "A. cold B. hot C. sore D. body", "C", "Chữ 'o' trong sore đọc là /ɔ:/, khác với các từ còn lại.", "A. cold|B. hot|C. sore|D. body"],
+    [1, "Task 2. Pronunciation.", "mcq", "A. small B. sorry C. sure D. sometimes", "C", "Chữ 's' trong sure đọc là /ʃ/ (s nặng), còn lại là /s/ (s nhẹ).", "A. small|B. sorry|C. sure|D. sometimes"],
+    [1, "Task 3. Choose the best option.", "mcq", "Hanoi is a big ______ in the north.", "C", "Hà Nội là một thành phố (city).", "A. street|B. town|C. city|D. lane"],
+    [1, "Task 3. Choose the best option.", "mcq", "His ______ is 187B, Giang Vo Street.", "D", "Có số nhà và tên đường -> Đây là địa chỉ (address).", "A. class|B. road|C. town|D. address"],
+    [1, "Task 3. Choose the best option.", "mcq", "______ your favourite subject?", "C", "Cấu trúc hỏi: What is -> Viết tắt là What's.", "A. Which|B. What|C. What’s|D. Who"],
+    [1, "Task 3. Choose the best option.", "mcq", "What subject is he ______ now? - Vietnamese.", "C", "Có 'now' -> Hiện tại tiếp diễn: is + V-ing (learning).", "A. to learn|B. learn|C. learning|D. learned"],
+    [1, "Task 3. Choose the best option.", "mcq", "Linda: Who do you live ______? Mai: I live ______ my parents.", "C", "Sống cùng với ai dùng giới từ 'with'.", "A. in - in|B. for - for|C. with - with|D. at - at"],
+    [1, "Task 3. Choose the best option.", "mcq", "______ your friend like Vietnamese? Yes, she does.", "D", "Chủ ngữ 'your friend' số ít -> Mượn trợ động từ 'Does'.", "A. am|B. is|C. do|D. does"],
+    [1, "Task 3. Choose the best option.", "mcq", "I like math because I like ______.", "A", "Môn Toán liên quan đến việc giải quyết bài toán (solving problems).", "A. solving problems|B. doing experiments|C. making things|D. reading stories"],
+    [1, "Task 3. Choose the best option.", "mcq", "My father watches TV every day at 7 p.m. He ______ watches TV at 7 p.m.", "A", "Ngày nào cũng làm (every day) -> Tần suất 100% (always).", "A. always|B. usually|C. often|D. sometimes"],
+    // Sửa lỗi Reorder: Gỡ dấu chấm phẩy, kiểm tra đủ từ
+    [1, "Task 4. Put the words in correct order.", "reorder", "they/ do/ subjects/ Which/ like/ IT/ like/ They/ and/ Science", "Which subjects do they like They like IT and Science", "Câu hỏi: Từ để hỏi + trợ động từ + S + V?. Trả lời: S + V + O.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "exercise/ usually/ they/ get/ do/ morning/ up/ early/ and", "They usually get up early and do morning exercise", "Trạng từ chỉ tần suất (usually) đứng trước động từ thường (get up).", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "small/ quiet/ village/ and/ It/ is/ a", "It is a small and quiet village", "S + be + a/an + adj + and + adj + N.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "because/ He/ English/ likes/ he/ likes/ languages/ learning", "He likes English because he likes learning languages", "Dùng 'because' nối 2 mệnh đề nguyên nhân - kết quả.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "often/ we/ at/ stay/ and/ school/ homework/ do/ our/ afternoon/ the/ in", "We often stay at school and do our homework in the afternoon", "Cụm thời gian (in the afternoon) đứng cuối câu.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "cooks/ sometimes/ goes/ she/ shopping/ and/ school/ dinner/ after", "She sometimes goes shopping and cooks dinner after school", "Liệt kê hành động: goes shopping and cooks dinner.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "use/ They/ computers/ never/ PE/ in/ class", "They never use computers in PE class", "PE class là lớp Thể dục. Trạng ngữ nơi chốn đứng cuối.", ""],
+    [1, "Task 4. Put the words in correct order.", "reorder", "English/ at/ My/ class/ four/ to/ a/ starts/ quarter", "My English class starts at a quarter to four", "Cấu trúc giờ: a quarter to + số giờ (giờ kém 15).", ""],
+
+    // ================== BÀI TẬP SỐ 2 ==================
+    [2, "Task 1. Odd one out.", "mcq", "A. holiday B. teachers C. children D. subjects", "A", "Holiday (kỳ nghỉ) không liên quan tới trường lớp như các từ còn lại.", "A. holiday|B. teachers|C. children|D. subjects"],
+    [2, "Task 1. Odd one out.", "mcq", "A. January B. April C. November D. month", "D", "Month là từ chung (tháng), còn lại là tên tháng cụ thể.", "A. January|B. April|C. November|D. month"],
+    [2, "Task 1. Odd one out.", "mcq", "A. subject B. holiday C. experiment D. exciting", "D", "Exciting là tính từ, các từ còn lại là danh từ.", "A. subject|B. holiday|C. experiment|D. exciting"],
+    [2, "Task 1. Odd one out.", "mcq", "A. her B. his C. they D. their", "C", "They là Đại từ nhân xưng, còn lại là Tính từ sở hữu.", "A. her|B. his|C. they|D. their"],
+    [2, "Task 1. Odd one out.", "mcq", "A. clock B. wardrobe C. picture D. eight", "D", "Eight là số đếm, còn lại là đồ vật.", "A. clock|B. wardrobe|C. picture|D. eight"],
+    [2, "Task 1. Odd one out.", "mcq", "A. solving B. problems C. using D. learning", "B", "Problems là danh từ số nhiều, còn lại là V-ing.", "A. solving|B. problems|C. using|D. learning"],
+    [2, "Task 1. Odd one out.", "mcq", "A. crowded B. country C. noisy D. modern", "B", "Country là danh từ, còn lại là tính từ.", "A. crowded|B. country|C. noisy|D. modern"],
+    [2, "Task 1. Odd one out.", "mcq", "A. pretty B. bad C. nine D. beautiful", "C", "Nine là số đếm, còn lại là tính từ.", "A. pretty|B. bad|C. nine|D. beautiful"],
+    [2, "Task 2. Pronunciation.", "mcq", "A. see B. where C. never D. get", "A", "Chữ 'ee' trong see đọc là /i:/, còn lại đọc là /e/.", "A. see|B. where|C. never|D. get"],
+    [2, "Task 2. Pronunciation.", "mcq", "A. trip B. did C. with D. nice", "D", "Chữ 'i' trong nice đọc là /aɪ/, còn lại là /ɪ/.", "A. trip|B. did|C. with|D. nice"],
+    [2, "Task 2. Pronunciation.", "mcq", "A. May B. play C. stay D. watch", "D", "Chữ 'a' trong watch đọc là /ɒ/, còn lại là /eɪ/.", "A. May|B. play|C. stay|D. watch"],
+    [2, "Task 2. Pronunciation.", "mcq", "A. back B. taxi C. last D. parents", "C", "Chữ 'a' trong last đọc là /ɑ:/, còn lại là /æ/.", "A. back|B. taxi|C. last|D. parents"],
+    [2, "Task 2. Pronunciation.", "mcq", "A. coach B. cinema C. come D. country", "B", "Chữ 'c' trong cinema đọc là /s/, còn lại là /k/.", "A. coach|B. cinema|C. come|D. country"],
+    [2, "Task 3. Choose the best option.", "mcq", "What does your mother ______ in the evening? - She ______ me with my homework.", "A", "Câu hỏi dùng trợ động từ does -> V nguyên thể (do). Trả lời chủ ngữ số ít (She) -> V thêm s/es (helps).", "A. do – help|B. do – helps|C. does – helps|D. does – help"],
+    [2, "Task 3. Choose the best option.", "mcq", "They usually ______ early and do morning exercise.", "B", "Chủ ngữ số nhiều 'They' -> Động từ nguyên thể (get up).", "A. gets on|B. get up|C. get on|D. gets up"],
+    [2, "Task 3. Choose the best option.", "mcq", "Mary often ______ TV after dinner with her parents.", "C", "Chủ ngữ số ít 'Mary' -> Động từ thêm 'es' (watches).", "A. watch|B. to watch|C. watches|D. watchs"],
+    [2, "Task 3. Choose the best option.", "mcq", "What is your favourite holiday?", "C", "Holiday là ngày lễ -> New Year.", "A. It’s English|B. It’s Music|C. It’s New Year|D. It’s Art"],
+    [2, "Task 3. Choose the best option.", "mcq", "How do you say “30/4” in English?", "C", "Ngày 30/4 là April thirtieth.", "A. June thirtieth|B. May thirtieth|C. April thirtieth|D. August thirtieth"],
+    [2, "Task 3. Choose the best option.", "mcq", "Could you ______ the presents?", "C", "Hành động đi với quà (presents) là wrap (gói quà).", "A. blow up|B. make up|C. wrap|D. invite"],
+    [2, "Task 3. Choose the best option.", "mcq", "______ did you go on holiday?", "B", "Hỏi về nơi chốn đi nghỉ -> Where.", "A. What|B. Where|C. Which|D. How many"],
+    [2, "Task 3. Choose the best option.", "mcq", "______ do you go to the sea? - Once a month.", "D", "Trả lời chỉ tần suất (Once a month) -> Hỏi bằng How often.", "A. How long|B. how far|C. how many|D. how often"],
+    [2, "Task 3. Choose the best option.", "mcq", "Where ______ you last summer?", "C", "Quá khứ đơn (last summer), S là 'you' -> to be là 'were'.", "A. are|B. was|C. were|D. is"],
+    // Sửa lỗi thiếu chữ (Q59 và các câu khác), gỡ dấu câu
+    [2, "Task 4. Put the words in correct order.", "reorder", "island/ get/ did/ family/ how/ your/ to/ Phu/ Quoc", "How did your family get to Phu Quoc island", "Hỏi phương tiện trong quá khứ: How did + S + get to + Place?", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "is/ What/ holiday/ her/ favourite/ Lunar/ It/ New/ is/ Year", "What is her favourite holiday It is Lunar New Year", "Mẫu câu hỏi sở thích: What is + TTSH + favourite + Danh từ?", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "get/ up/ breakfast/ time/ father/ and/ your/ have/ what/ does", "What time does your father get up and have breakfast", "Hỏi giờ: What time + does + S + V?", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "every/ school/ Jane/ morning/ eight/ to/ oclock/ goes/ at", "Jane goes to school at eight oclock every morning", "Thời gian cụ thể (at 8 oclock) đứng trước thời gian chung chung (every morning).", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "balloons/ you/ Could/ the/ up/ blow/ Yes/ sure", "Could you blow up the balloons Yes sure", "Yêu cầu lịch sự: Could you + V nguyên thể? (blow up = thổi).", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "Hoa/ birthday/ to/ her/ invited/ Minh/ party", "Hoa invited Minh to her birthday party", "Cấu trúc: invite sb to sth (mời ai tới đâu).", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "celebrate/ people/ do/ do/ What/ to/ Christmas/ Day", "What do people do to celebrate Christmas Day", "Từ để hỏi + do + S + do + to + V?", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "my/ I/ and/ brother/ the/ wrap/ presents/ Tonys/ birthday/ for", "I and my brother wrap the presents for Tonys birthday", "S (I and my brother) + V (wrap) + O (presents).", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "countryside/ We/ picnic/ will/ for/ a/ in/ go/ the", "We will go for a picnic in the countryside", "Go for a picnic (đi dã ngoại). In the countryside (ở vùng quê).", ""],
+    [2, "Task 4. Put the words in correct order.", "reorder", "is/ Christmas/ on/ the/ twenty/ fifth/ of/ December", "Christmas is on the twenty fifth of December", "Đọc ngày tháng: on the + ngày (số thứ tự) + of + tháng.", ""], // ĐÃ SỬA: Bổ sung "the", "of"
+
+    // ================== BÀI TẬP SỐ 3 ==================
+    [3, "Task 1. Odd one out.", "mcq", "A. building B. flat C. America D. tower", "C", "America là tên quốc gia, còn lại là các loại công trình kiến trúc/nhà ở.", "A. building|B. flat|C. America|D. tower"],
+    [3, "Task 1. Odd one out.", "mcq", "A. Japanese B. China C. American D. Malaysian", "B", "China là quốc gia, còn lại là quốc tịch (có đuôi -ese, -an).", "A. Japanese|B. China|C. American|D. Malaysian"],
+    [3, "Task 1. Odd one out.", "mcq", "A. nationality B. active C. clever D. friendly", "A", "Nationality là Danh từ, còn lại là Tính từ chỉ tính cách.", "A. nationality|B. active|C. clever|D. friendly"],
+    [3, "Task 1. Odd one out.", "mcq", "A. firefighter B. reporter C. gardener D. butter", "D", "Butter (bơ) là thức ăn, còn lại là danh từ chỉ nghề nghiệp.", "A. firefighter|B. reporter|C. gardener|D. butter"],
+    [3, "Task 1. Odd one out.", "mcq", "A. teach B. teachers C. children D. students", "A", "Teach là động từ (dạy), còn lại là danh từ chỉ người.", "A. teach|B. teachers|C. children|D. students"],
+    [3, "Task 1. Odd one out.", "mcq", "A. paper B. invite C. blow D. wrap", "A", "Paper là danh từ (giấy), còn lại là động từ hành động.", "A. paper|B. invite|C. blow|D. wrap"],
+    [3, "Task 2. Pronunciation.", "mcq", "A. fun B. ruler C. number D. subject", "B", "Chữ 'u' trong ruler đọc là /u:/, còn lại đọc là /ʌ/.", "A. fun|B. ruler|C. number|D. subject"],
+    [3, "Task 2. Pronunciation.", "mcq", "A. station B. cinema C. place D. late", "B", "Chữ 'a' trong cinema đọc là /ə/, còn lại đọc là /eɪ/.", "A. station|B. cinema|C. place|D. late"],
+    [3, "Task 2. Pronunciation.", "mcq", "A. teach B. eat C. please D. year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A. teach|B. eat|C. please|D. year"],
+    [3, "Task 2. Pronunciation.", "mcq", "A. city B. live C. ski D. time", "D", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/ hoặc /i:/.", "A. city|B. live|C. ski|D. time"],
+    [3, "Task 2. Pronunciation.", "mcq", "A. night B. giraffe C. tiger D. time", "B", "Chữ 'i' trong giraffe đọc là /ɪ/, còn lại đọc là /aɪ/.", "A. night|B. giraffe|C. tiger|D. time"],
+    [3, "Task 3. Choose the best option.", "mcq", "______ brother’s name is Phong.", "A", "Cần Tính từ sở hữu đứng trước danh từ -> My.", "A. my|B. mine|C. him|D. yours"],
+    [3, "Task 3. Choose the best option.", "mcq", "Lan is sitting ______ Hoa and Hue.", "C", "Có 'and' nối 2 người -> Dùng between (ở giữa).", "A. next|B. to|C. between|D. in"],
+    [3, "Task 3. Choose the best option.", "mcq", "There are some pictures ______ the wall.", "A", "Treo trên tường dùng giới từ 'on'.", "A. on|B. in|C. at|D. to"],
+    [3, "Task 3. Choose the best option.", "mcq", "______ were you yesterday evening? I was at home.", "C", "Trả lời 'at home' (ở nhà) -> Hỏi về nơi chốn (Where).", "A. When|B. Who|C. Where|D. How"],
+    [3, "Task 3. Choose the best option.", "mcq", "They ______ at Hoa’s birthday party yesterday.", "D", "Quá khứ 'yesterday', S số nhiều 'They' -> to be là 'were'.", "A. am|B. is|C. are|D. were"],
+    [3, "Task 3. Choose the best option.", "mcq", "Could you invite ______?", "B", "Mời (invite) thì phải là mời bạn bè (friends).", "A. a cake|B. friends|C. presents|D. candy"],
+    [3, "Task 3. Choose the best option.", "mcq", "He hits the ball very ______.", "A", "Trạng từ của 'hard' vẫn là 'hard' (mạnh/chăm chỉ). 'Hardly' mang nghĩa là hầu như không.", "A. hard|B. hardly|C. slow|D. quick"],
+    [3, "Task 3. Choose the best option.", "mcq", "They ______ football yesterday afternoon.", "D", "Dấu hiệu quá khứ 'yesterday' -> V thêm -ed (played).", "A. play|B. plays|C. playes|D. played"],
+    [3, "Task 3. Choose the best option.", "mcq", "They ______ mineral water in the birthday party last weekend.", "A", "Quá khứ đơn 'last weekend'. Động từ bất quy tắc drink -> drank.", "A. drank|B. drink|C. drinked|D. drinks"],
+    [3, "Task 3. Choose the best option.", "mcq", "The tigers are so ______.", "D", "Tính từ miêu tả con hổ -> scary (đáng sợ).", "A. delicious|B. yucky|C. badly|D. scary"],
+    // Sửa lỗi reorder
+    [3, "Task 4. Put the words in correct order.", "reorder", "do/ like/ doing/ What/ you/ your/ in/ time/ free", "What do you like doing in your free time", "Cấu trúc hỏi sở thích lúc rảnh: What do you like doing in your free time?", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "coffee/ was/ I/ a/ at/ shop/ delicious/ The/ were/ drinks", "I was at a coffee shop The drinks were delicious", "Ghép 2 câu đơn giản miêu tả quá khứ.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "baked/ My/ cupcakes/ for/ mother/ my/ birthday/ night/ last", "My mother baked cupcakes for my birthday last night", "S (My mother) + V (baked cupcakes) + Mục đích + Thời gian.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "would/ in/ you/ What/ like/ the/ to/ be/ future", "What would you like to be in the future", "Cấu trúc hỏi nghề nghiệp tương lai.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "My/ TV/ sister/ cartoon/ always/ English/ on/ watches", "My sister always watches English cartoon on TV", "S + adv tần suất (always) + V + O + on TV.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "your/ Why/ learn/ does/ father/ English", "Why does your father learn English", "Câu hỏi lý do: Why + trợ ĐT + S + V?", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "very/ because/ I/ him/ he/ clever/ like/ much/ is/ and/ brave", "I like him very much because he is clever and brave", "Mệnh đề nguyên nhân kết quả nối bằng because.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "at/ Tony/ the/ was/ stadium/ Sunday/ last/ It/ noisy/ was", "Tony was at the stadium last Sunday It was noisy", "Cấu trúc to be quá khứ đơn miêu tả địa điểm và tính chất.", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "do/ Why/ like/ you/ New/ Year/ Lunar/ Because/ watch/ I/ fireworks/ can", "Why do you like Lunar New Year Because I can watch fireworks", "Hỏi lý do và trả lời bằng Because I can...", ""],
+    [3, "Task 4. Put the words in correct order.", "reorder", "learns/ well/ geography/ He/ very/ He/ grade/ gets/ A", "He learns geography very well He gets grade A", "Miêu tả hành động tốt (learn well) dẫn đến kết quả tốt (gets grade A).", ""],
+
+    // ================== BÀI TẬP SỐ 4 ==================
+    [4, "Task 1. Odd one out.", "mcq", "A. projects B. problems C. solves D. experiments", "C", "Solves là Động từ thêm 's', còn lại là Danh từ số nhiều.", "A. projects|B. problems|C. solves|D. experiments"],
+    [4, "Task 1. Odd one out.", "mcq", "A. where B. whose C. which D. want", "D", "Want là động từ, còn lại là Từ để hỏi (Wh-words).", "A. where|B. whose|C. which|D. want"],
+    [4, "Task 1. Odd one out.", "mcq", "A. square B. above C. beside D. in front of", "A", "Square là danh từ (hình vuông/quảng trường), còn lại là giới từ chỉ vị trí.", "A. square|B. above|C. beside|D. in front of"],
+    [4, "Task 1. Odd one out.", "mcq", "A. glue stick B. school C. set square D. crayon", "B", "School (trường học), còn lại là các dụng cụ học tập nhỏ.", "A. glue stick|B. school|C. set square|D. crayon"],
+    [4, "Task 1. Odd one out.", "mcq", "A. aquarium B. campsite C. funfair D. around", "D", "Around là giới từ/trạng từ, còn lại là danh từ chỉ địa điểm vui chơi.", "A. aquarium|B. campsite|C. funfair|D. around"],
+    [4, "Task 1. Odd one out.", "mcq", "A. rarely B. never C. ethics D. often", "C", "Ethics (môn Đạo đức) là danh từ, còn lại là trạng từ tần suất.", "A. rarely|B. never|C. ethics|D. often"],
+    [4, "Task 2. Pronunciation.", "mcq", "A. headache B. toothache C. watch D. stomach ache", "C", "Chữ 'ch' trong watch đọc là /tʃ/, còn trong các từ bệnh tật (ache) đọc là /k/.", "A. headache|B. toothache|C. watch|D. stomach ache"],
+    [4, "Task 2. Pronunciation.", "mcq", "A. teach B. eat C. please D. year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A. teach|B. eat|C. please|D. year"],
+    [4, "Task 2. Pronunciation.", "mcq", "A. brush B. music C. struck D. bus", "B", "Chữ 'u' trong music đọc là /ju:/, còn lại đọc là /ʌ/.", "A. brush|B. music|C. struck|D. bus"],
+    [4, "Task 2. Pronunciation.", "mcq", "A. plane B. bank C. paddy D. Math", "A", "Chữ 'a' trong plane đọc là /eɪ/, còn lại đọc là /æ/.", "A. plane|B. bank|C. paddy|D. Math"],
+    [4, "Task 2. Pronunciation.", "mcq", "A. hour B. house C. help D. home", "A", "Chữ 'h' trong hour là âm câm, còn lại được phát âm /h/.", "A. hour|B. house|C. help|D. home"],
+    [4, "Task 3. Choose the best option.", "mcq", "What do people do to celebrate Christmas? They ______ a Christmas tree.", "C", "Trang trí/dựng cây thông Noel dùng động từ 'put up' hoặc 'decorate'.", "A. wear|B. watch|C. put up|D. blow up"],
+    [4, "Task 3. Choose the best option.", "mcq", "Why would you like to be a reporter. Because I'd like to ______.", "B", "Phóng viên (reporter) thì công việc là báo cáo tin tức (report the news).", "A. grow flowers|B. report the news|C. teach children|D. write stories"],
+    [4, "Task 3. Choose the best option.", "mcq", "When is Children’s day? It’s on ______.", "D", "Ngày Quốc tế Thiếu nhi: June 1st (June first).", "A. June one|B. June second|C. June third|D. June first"],
+    [4, "Task 3. Choose the best option.", "mcq", "Did they go to Ba Na hills last weekend?", "C", "Câu hỏi dạng Yes/No với Did -> Trả lời Yes, they did.", "A. Yes, they do|B. Yes, they are|C. Yes, they did|D. Yes, they were"],
+    [4, "Task 3. Choose the best option.", "mcq", "______ he eat chicken last night?", "D", "Có 'last night' -> Quá khứ đơn -> Dùng trợ động từ Did.", "A. is|B. Does|C. Do|D. Did"],
+    [4, "Task 3. Choose the best option.", "mcq", "______ the matter with you?", "C", "Mẫu câu hỏi thăm sức khỏe: What's the matter with you?", "A. What|B. what’s|C. What’s|D. What’re"],
+    [4, "Task 3. Choose the best option.", "mcq", "I ______ a headache.", "A", "Nói về bệnh tật: I have + a/an + tên bệnh.", "A. have|B. has|C. had|D. am"],
+    [4, "Task 3. Choose the best option.", "mcq", "What’s the weather like ______ summer?", "C", "Đứng trước danh từ chỉ mùa (summer) dùng giới từ 'in'.", "A. on|B. is|C. in|D. to"],
+    [4, "Task 3. Choose the best option.", "mcq", "It’s ______ hot and sunny in summer.", "D", "Cần trạng từ tần suất để bổ nghĩa (usually: thường xuyên).", "A. in|B. on|C. to|D. usually"],
+    [4, "Task 3. Choose the best option.", "mcq", "What food will you ______ at the party?", "A", "Sau 'will' dùng động từ nguyên thể (have).", "A. have|B. having|C. to have|D. had"],
+    // Reorder
+    [4, "Task 4. Put the words in correct order.", "reorder", "you/ walk/ beach/ Did/ on/ last/ the/ Sunday", "Did you walk on the beach last Sunday", "Câu hỏi Yes/No quá khứ: Did + S + V + Nơi chốn + Thời gian?", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "didn't/ He/ river/ go/ the/ to/ went/ He/ beach/ to/ the", "He didn't go to the river He went to the beach", "Câu phủ định quá khứ dùng didn't + V nguyên thể.", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "he/ have/ Did/ a/ in/ barbecue/ garden/ the/ yesterday", "Did he have a barbecue in the garden yesterday", "Tổ chức tiệc nướng: have a barbecue.", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "you/ decorate/ Will/ for/ the/ Tet/ house", "Will you decorate the house for Tet", "Câu hỏi tương lai đơn: Will + S + V + O?", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "going/ to/ a/ festival/ I’m/ flower/ Tet/ at", "I'm going to a flower festival at Tet", "Tương lai gần/dự định: I'm going to + địa điểm.", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "eats/ food/ healthy/ She/ to/ healthy/ stay", "She eats healthy food to stay healthy", "Chỉ mục đích dùng 'to + V' (to stay healthy).", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "brother/ once/ My/ basketball/ a/ plays/ week", "My brother plays basketball once a week", "Trạng từ tần suất cụ thể (once a week) đứng cuối câu.", ""],
+    [4, "Task 4. Put the words in correct order.", "reorder", "is/ What/ you/ matter/ the/ with/ have/ I/ headache/ a", "What is the matter with you I have a headache", "Mẫu câu giao tiếp cơ bản đi khám bệnh.", ""],
+
+    // ================== BÀI TẬP SỐ 5 ==================
+    [5, "Task 1. Odd one out.", "mcq", "A. lemon B. lime C. tea D. orange", "C", "Tea (trà) là đồ uống chế biến, còn lại là tên các loại quả họ cam chanh.", "A. lemon|B. lime|C. tea|D. orange"],
+    [5, "Task 1. Odd one out.", "mcq", "A. juice B. orange C. orange juice D. lemonade", "B", "Orange là trái cây nguyên quả/màu sắc, còn lại là các loại nước ép dạng lỏng.", "A. juice|B. orange|C. orange juice|D. lemonade"],
+    [5, "Task 1. Odd one out.", "mcq", "A. will B. make C. bring D. do", "A", "Will là trợ động từ (tương lai), còn lại là động từ thường hành động.", "A. will|B. make|C. bring|D. do"],
+    [5, "Task 1. Odd one out.", "mcq", "A. milk B. curry C. juice D. lemonade", "B", "Curry (cà ri) là thức ăn, còn lại là thức uống.", "A. milk|B. curry|C. juice|D. lemonade"],
+    [5, "Task 1. Odd one out.", "mcq", "A. tour guide B. designer C. hairdresser D. work", "D", "Work là động từ/danh từ chung, còn lại là danh từ chỉ nghề nghiệp.", "A. tour guide|B. designer|C. hairdresser|D. work"],
+    [5, "Task 1. Odd one out.", "mcq", "A. office B. bank C. businessman D. store", "C", "Businessman là người (doanh nhân), còn lại là địa điểm/nơi làm việc.", "A. office|B. bank|C. businessman|D. store"],
+    [5, "Task 2. Pronunciation.", "mcq", "A. listen B. time C. living D. city", "B", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/.", "A. listen|B. time|C. living|D. city"],
+    [5, "Task 2. Pronunciation.", "mcq", "A. home B. mother C. brother D. brush", "A", "Chữ 'o' trong home đọc là /əʊ/, còn lại (và chữ 'u') đọc là /ʌ/.", "A. home|B. mother|C. brother|D. brush"],
+    [5, "Task 2. Pronunciation.", "mcq", "A. country B. one C. come D. open", "D", "Chữ 'o' trong open đọc là /əʊ/, còn lại đọc là /ʌ/.", "A. country|B. one|C. come|D. open"],
+    [5, "Task 2. Pronunciation.", "mcq", "A. small B. floor C. door D. what", "D", "Chữ 'a' trong what đọc là /ɒ/, còn lại âm là /ɔ:/.", "A. small|B. floor|C. door|D. what"],
+    [5, "Task 2. Pronunciation.", "mcq", "A. game B. table C. small D. play", "C", "Chữ 'a' trong small đọc là /ɔ:/, còn lại đọc là /eɪ/.", "A. game|B. table|C. small|D. play"],
+    [5, "Task 3. Choose the best option.", "mcq", "He likes cooking. He'd like to be a/an ______.", "B", "Thích nấu ăn thì muốn trở thành đầu bếp (chef).", "A. actor|B. chef|C. hairdresser|D. pilot"],
+    [5, "Task 3. Choose the best option.", "mcq", "She doesn’t like Maths. ______ it’s difficult.", "C", "Giải thích lý do không thích -> Dùng 'Because' (bởi vì).", "A. but|B. and|C. because|D. or"],
+    [5, "Task 3. Choose the best option.", "mcq", "______ book is on the table.", "B", "Cần Tính từ sở hữu chỉ sự sở hữu của Lan (Lan's).", "A. Lan|B. Lan’s|C. he|D. she"],
+    [5, "Task 3. Choose the best option.", "mcq", "What is your ______? It’s 15 Nguyen Du street.", "A", "Có số nhà + tên đường -> Đây là hỏi địa chỉ (address).", "A. address|B. flat|C. city|D. town"],
+    [5, "Task 3. Choose the best option.", "mcq", "______ lessons does she have today?", "B", "Lessons đếm được số nhiều -> Hỏi số lượng dùng How many.", "A. How much|B. How many|C. How often|D. How"],
+    [5, "Task 3. Choose the best option.", "mcq", "Could you ______ me the way to the computer room?", "C", "Chỉ đường dùng cụm từ 'tell somebody the way'.", "A. say|B. paint|C. tell|D. sing"],
+    [5, "Task 3. Choose the best option.", "mcq", "We ______ the old buildings last week.", "B", "Có 'last week' (quá khứ đơn) -> Động từ thêm -ed (visited).", "A. visit|B. visited|C. to visit|D. visiting"],
+    [5, "Task 3. Choose the best option.", "mcq", "There will be ______ showers, so I'm going to bring the raincoat.", "C", "Showers đếm được số nhiều, câu khẳng định -> Dùng 'some'.", "A. a|B. an|C. some|D. many"],
+    [5, "Task 3. Choose the best option.", "mcq", "I think, many people will ______ astronauts in the future.", "C", "Sau 'will' dùng động từ to be ở dạng nguyên thể (be).", "A. are|B. is|C. be|D. am"],
+    [5, "Task 3. Choose the best option.", "mcq", "My father ______ in Ha Noi last week.", "B", "S số ít (My father), thì quá khứ (last week) -> to be là 'was'.", "A. were|B. was|C. is|D. are"],
+    // Reorder
+    [5, "Task 4. Put the words in correct order.", "reorder", "thirsty/ I/ feel/ want/ I/ to/ drink/ water/ some", "I feel thirsty I want to drink some water", "Cấu trúc want to V (muốn làm gì đó).", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "always/ homework/ They/ their/ in/ evening/ the/ do", "They always do their homework in the evening", "Trạng từ tần suất (always) đứng trước động từ thường (do).", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "every/ day/ how/ bananas/ do/ many/ you/ eat", "How many bananas do you eat every day", "Hỏi số lượng đếm được: How many + N(s) + do/does + S + V?", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "too/ She/ much/ eat/ candy/ shouldn't", "She shouldn't eat too much candy", "Lời khuyên: shouldn't + V nguyên thể.", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "you/ Do/ your/ live/ with/ parents", "Do you live with your parents", "Cấu trúc live with sb (sống cùng ai).", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "you/ live/ that/ Do/ in/ flat/ I/ No/ don't", "Do you live in that flat No I don't", "Câu hỏi Yes/No hiện tại đơn với 'Do'.", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "is/ address/ what/ your/ 36/ It's/ Sun/ flower/ street", "What is your address It's 36 Sun flower street", "Hỏi địa chỉ bằng What is your address.", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "a/ I/ new/ have/ friend/ school/ at", "I have a new friend at school", "Vị trí tính từ: a + tính từ (new) + danh từ (friend).", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "nationality/ her/ is/ What/ is/ she/ Malaysian", "What is her nationality she is Malaysian", "Hỏi quốc tịch bằng What is... nationality?", ""],
+    [5, "Task 4. Put the words in correct order.", "reorder", "do/ do/ What/ the/ weekend/ you/ at", "What do you do at the weekend", "Cụm thời gian 'at the weekend' đứng cuối câu hỏi.", ""]
+];
+
+/* ================= TRẠNG THÁI ỨNG DỤNG LÕI ================= */
+let questionBank = [];
+let currentIndex = 0;
+let userProgress = {
+    total: rawData.length,
+    status: new Array(rawData.length).fill(false),
+    tries: new Array(rawData.length).fill(0),
+    mistakes: new Array(rawData.length).fill(null).map(() => [])
+};
+let reorderState = { pool: [], answer: [] };
+
+/* ================= KHỞI ĐỘNG ỨNG DỤNG ================= */
+function startApp() {
+    const nameInput = document.getElementById('studentName').value.trim();
+    if (nameInput === "") {
+        alert("Em nhớ nhập tên của mình để bắt đầu nhé!");
+        return;
+    }
+    
+    // Khởi tạo mảng Object chuẩn từ rawData
+    questionBank = rawData.map((d, index) => {
+        // Tự động loại bỏ MỌI DẤU CHẤM/PHẨY/HỎI CHẤM ra khỏi câu hỏi để làm sạch dữ liệu
+        let cleanText = d[3].replace(/[.,?!]/g, '');
+        let cleanCorrect = d[4].replace(/[.,?!]/g, '');
+        let cleanOptions = d[6] ? d[6].split('|') : [];
+
+        return {
+            id: index,
+            sampleNum: d[0],
+            taskTitle: d[1],
+            qType: d[2],
+            qText: cleanText,
+            correctAns: cleanCorrect,
+            explainText: d[5],
+            options: cleanOptions
+        }
+    });
+
+    document.getElementById('display-name').innerText = nameInput;
+    document.getElementById('welcome-screen').classList.remove('active-screen');
+    document.getElementById('quiz-screen').classList.add('active-screen');
+
+    initDropdownMenu();
+    loadQuestion(0);
+}
+
+function initDropdownMenu() {
+    const select = document.getElementById('question-nav');
+    select.innerHTML = '';
+    questionBank.forEach((q, idx) => {
+        let opt = document.createElement('option');
+        opt.value = idx;
+        opt.innerText = `Câu ${idx + 1} (Đề ${q.sampleNum})`;
+        select.appendChild(opt);
+    });
+}
+
+/* ================= HIỂN THỊ CÂU HỎI ================= */
+function loadQuestion(index) {
+    currentIndex = index;
+    const q = questionBank[index];
+    
+    document.getElementById('q-task').innerText = `ĐỀ ${q.sampleNum} - ${q.taskTitle}`;
+    
+    // Nếu là câu trắc nghiệm, vẫn in text bình thường. Nếu là reorder, in text hướng dẫn.
+    document.getElementById('q-text').innerText = q.qType === 'reorder' ? "Chạm vào các từ màu xanh để ghép thành câu hoàn chỉnh:" : q.qText;
+    
+    const interactZone = document.getElementById('interactive-zone');
+    interactZone.innerHTML = '';
+
+    if (q.qType === 'mcq') {
+        const grid = document.createElement('div');
+        grid.className = 'mcq-grid';
+        q.options.forEach(optText => {
+            let btn = document.createElement('button');
+            btn.className = 'mcq-opt';
+            // Không gỡ dấu chấm ở phần A. B. C. D. để giữ format cho đẹp
+            btn.innerText = optText; 
+            btn.onclick = () => selectMCQ(btn);
+            grid.appendChild(btn);
+        });
+        interactZone.appendChild(grid);
+    } else if (q.qType === 'reorder') {
+        // Tách câu bằng các khoảng trắng hoặc dấu gạch chéo
+        let words = q.qText.split(/[\/\s]+/).filter(w => w.trim().length > 0);
+        reorderState.pool = words;
+        reorderState.answer = [];
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'reorder-container';
+        
+        const ansZone = document.createElement('div');
+        ansZone.className = 'reorder-zone';
+        ansZone.id = 'reorder-ans-zone';
+        
+        const poolZone = document.createElement('div');
+        poolZone.className = 'word-pool';
+        poolZone.id = 'reorder-pool-zone';
+
+        wrapper.appendChild(ansZone);
+        wrapper.appendChild(poolZone);
+        interactZone.appendChild(wrapper);
+        
+        renderWordChips();
+    }
+
+    // Ẩn/Hiện nút Submit
+    document.getElementById('btn-check').style.display = userProgress.status[index] ? 'none' : 'inline-block';
+    syncUI();
+}
+
+function selectMCQ(btn) {
+    document.querySelectorAll('.mcq-opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function renderWordChips() {
+    const poolZone = document.getElementById('reorder-pool-zone');
+    const ansZone = document.getElementById('reorder-ans-zone');
+    poolZone.innerHTML = ''; ansZone.innerHTML = '';
+
+    reorderState.answer.forEach((word, idx) => {
+        let chip = document.createElement('div');
+        chip.className = 'word-chip';
+        chip.innerText = word;
+        chip.onclick = () => {
+            reorderState.pool.push(word);
+            reorderState.answer.splice(idx, 1);
+            renderWordChips();
+        };
+        ansZone.appendChild(chip);
+    });
+
+    reorderState.pool.forEach((word, idx) => {
+        let chip = document.createElement('div');
+        chip.className = 'word-chip';
+        chip.innerText = word;
+        chip.onclick = () => {
+            reorderState.answer.push(word);
+            reorderState.pool.splice(idx, 1);
+            renderWordChips();
+        };
+        poolZone.appendChild(chip);
+    });
+}
+
+/* ================= XỬ LÝ ĐÁP ÁN ================= */
+function checkAnswer() {
+    const q = questionBank[currentIndex];
+    let userAnswer = "";
+
+    if (q.qType === 'mcq') {
+        const selected = document.querySelector('.mcq-opt.selected');
+        if (!selected) { alert("Em hãy click chọn 1 đáp án trước khi Kiểm tra nhé!"); return; }
+        // Lấy ký tự A, B, C, D
+        userAnswer = selected.innerText.split('.')[0].trim();
+    } else if (q.qType === 'reorder') {
+        if (reorderState.pool.length > 0) { alert("Em phải xếp hết các từ vào khung xám bên trên nhé!"); return; }
+        userAnswer = reorderState.answer.join(' ');
+    }
+
+    userProgress.tries[currentIndex]++;
+    
+    // Loose matching: Chỉ lấy các ký tự là CHỮ và SỐ để so sánh (không quan tâm khoảng trắng, viết hoa hay dấu câu)
+    let isCorrect = false;
+    if(q.qType === 'mcq') {
+        isCorrect = userAnswer.toUpperCase() === q.correctAns.toUpperCase();
+    } else {
+        let cleanUser = userAnswer.toLowerCase().replace(/[^a-z0-9]/g, '');
+        let cleanCorrect = q.correctAns.toLowerCase().replace(/[^a-z0-9]/g, '');
+        isCorrect = cleanUser === cleanCorrect;
+    }
+
+    if (isCorrect) {
+        userProgress.status[currentIndex] = true;
+        syncUI();
+        showFeedbackPopup(true, "Giải thích: " + q.explainText);
+    } else {
+        userProgress.mistakes[currentIndex].push(userAnswer);
+        let errorMsg = `<b>Gợi ý & Lý thuyết:</b><br>${q.explainText}<br><br><i>Em hãy đọc kỹ lại và sửa lỗi nhé!</i>`;
+        showFeedbackPopup(false, errorMsg);
+    }
+}
+
+function syncUI() {
+    const correctCount = userProgress.status.filter(Boolean).length;
+    document.getElementById('progress-text-val').innerText = `${correctCount}/${userProgress.total}`;
+    document.getElementById('progress-bar').style.width = `${(correctCount / userProgress.total) * 100}%`;
+
+    const select = document.getElementById('question-nav');
+    select.options[currentIndex].innerText = userProgress.status[currentIndex] 
+        ? `Câu ${currentIndex + 1} (Đề ${questionBank[currentIndex].sampleNum}) ✅` 
+        : `Câu ${currentIndex + 1} (Đề ${questionBank[currentIndex].sampleNum})`;
+    select.value = currentIndex;
+
+    if (correctCount === userProgress.total) {
+        document.getElementById('btn-check').style.display = 'none';
+        document.getElementById('btn-report').style.display = 'inline-block';
+    }
+}
+
+function jumpToQuestion() {
+    loadQuestion(parseInt(document.getElementById('question-nav').value));
+}
+
+/* ================= POPUP HỆ THỐNG ================= */
+function showFeedbackPopup(isSuccess, msgHtml) {
+    const overlay = document.getElementById('popup-overlay');
+    const card = document.getElementById('popup-card');
+    
+    overlay.style.display = 'flex';
+    if (isSuccess) {
+        card.className = 'popup popup-correct';
+        document.getElementById('popup-icon').innerText = '🎉';
+        document.getElementById('popup-title').innerText = 'Chính xác tuyệt đối!';
+    } else {
+        card.className = 'popup popup-incorrect';
+        document.getElementById('popup-icon').innerText = '💡';
+        document.getElementById('popup-title').innerText = 'Khoan đã...';
+    }
+    document.getElementById('popup-desc').innerHTML = msgHtml;
+}
+
+function closePopup() {
+    document.getElementById('popup-overlay').style.display = 'none';
+    if (userProgress.status[currentIndex]) {
+        // Tự động tìm câu chưa làm tiếp theo
+        let nextIdx = userProgress.status.indexOf(false);
+        if (nextIdx !== -1) loadQuestion(nextIdx);
+        else showReport();
+    }
+}
+
+/* ================= XUẤT BẢNG BÁO CÁO ================= */
+function showReport() {
+    document.getElementById('quiz-screen').classList.remove('active-screen');
+    document.getElementById('report-screen').classList.add('active-screen');
+
+    let perfectHits = 0;
+    let redoCount = 0;
+    const tbody = document.getElementById('report-tbody');
+    tbody.innerHTML = '';
+
+    questionBank.forEach((q, idx) => {
+        if (userProgress.tries[idx] === 1 && userProgress.status[idx]) perfectHits++;
+        if (userProgress.mistakes[idx].length > 0) {
+            redoCount++;
+            let tr = document.createElement('tr');
+            let shortQuestion = q.qText.length > 40 ? q.qText.substring(0,40)+"..." : q.qText;
+            if (q.qType === 'reorder') shortQuestion = "Sắp xếp câu: " + shortQuestion;
+
+            let lastWrong = userProgress.mistakes[idx][userProgress.mistakes[idx].length - 1];
+            
+            tr.innerHTML = `
+                <td><b>Câu ${idx+1}:</b> ${shortQuestion}</td>
+                <td style="color: var(--danger); font-weight:800;">${lastWrong}</td>
+                <td style="color: var(--success); font-weight:800;">${q.correctAns}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    });
+
+    document.getElementById('stat-total').innerText = userProgress.total;
+    document.getElementById('stat-perfect').innerText = perfectHits;
+    document.getElementById('stat-redo').innerText = redoCount;
+}
+</script>
+</body>
+</html>
