@@ -50,25 +50,36 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ================= MÀN HÌNH KHỞI ĐẦU ================= */
-        #welcome-screen { padding: 50px 20px; text-align: center; justify-content: center; align-items: center; }
-        .mascot { font-size: 80px; margin-bottom: 10px; animation: bounce 2s infinite; }
+        #welcome-screen { padding: 40px 20px; text-align: center; justify-content: center; align-items: center; }
+        .mascot { font-size: 80px; margin-bottom: 5px; animation: bounce 2s infinite; }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         
-        #welcome-screen h1 { font-size: 2.5rem; color: var(--primary); font-weight: 900; margin-bottom: 10px; }
-        #welcome-screen p { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px; font-weight: 700; }
+        #welcome-screen h1 { font-size: 2.5rem; color: var(--primary); font-weight: 900; margin-bottom: 5px; }
+        #welcome-screen p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 25px; font-weight: 700; }
         
         .name-input {
-            width: 100%; max-width: 400px; padding: 18px 20px; font-size: 1.3rem; font-weight: 800;
+            width: 100%; max-width: 350px; padding: 15px 20px; font-size: 1.2rem; font-weight: 800;
             border: 4px solid #dfe4ea; border-radius: 15px; text-align: center; color: var(--primary);
-            outline: none; transition: 0.3s; margin-bottom: 25px;
+            outline: none; transition: 0.3s; margin-bottom: 20px;
         }
         .name-input:focus { border-color: var(--secondary); box-shadow: 0 0 15px rgba(255, 159, 67, 0.3); }
+
+        /* Chọn gói Đề */
+        .package-select {
+            display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;
+        }
+        .pkg-btn {
+            background: #f1f2f6; border: 3px solid #dfe4ea; padding: 15px 25px; border-radius: 15px;
+            font-size: 1.1rem; font-weight: 800; color: var(--text-muted); cursor: pointer; transition: 0.2s;
+        }
+        .pkg-btn:hover { background: #ffeaa7; border-color: #fdcb6e; }
+        .pkg-btn.active { background: #ffeaa7; border-color: var(--secondary); color: #d35400; box-shadow: 0 4px 10px rgba(253, 203, 110, 0.4); }
 
         .btn {
             padding: 16px 35px; font-size: 1.3rem; font-weight: 900; border: none; border-radius: 15px;
             cursor: pointer; transition: all 0.2s; color: #fff; text-transform: uppercase;
         }
-        .btn-start { background: var(--secondary); box-shadow: 0 8px 0 #d35400; }
+        .btn-start { background: var(--secondary); box-shadow: 0 8px 0 #d35400; width: 100%; max-width: 350px; }
         .btn-start:hover { transform: translateY(4px); box-shadow: 0 4px 0 #d35400; }
         .btn-submit { background: var(--primary); box-shadow: 0 8px 0 #373b8e; margin-top: 20px; width: 100%; max-width: 300px; }
         .btn-submit:hover { transform: translateY(4px); box-shadow: 0 4px 0 #373b8e; }
@@ -169,6 +180,7 @@
             .question-text { font-size: 1.3rem; }
             .app-header { flex-direction: column; }
             .progress-box { max-width: 100%; width: 100%; }
+            .package-select { flex-direction: column; }
         }
     </style>
 </head>
@@ -178,8 +190,15 @@
     <div class="app-container active-screen" id="welcome-screen">
         <div class="mascot">🦉</div>
         <h1>Đấu Trường Tiếng Anh</h1>
-        <p>Thử thách bản thân qua 5 Đề Thi. Hoàn thành để nhận bảng điểm nhé!</p>
-        <input type="text" id="studentName" class="name-input" placeholder="Nhập tên của em vào đây..." autocomplete="off">
+        <p>Thử thách bản thân! Hoàn thành 100% để nhận bảng điểm nhé!</p>
+        <input type="text" id="studentName" class="name-input" placeholder="Tên của em là gì nhỉ?" autocomplete="off">
+        
+        <p style="margin-bottom: 10px; font-weight: 800; color: var(--primary);">Chọn gói đề luyện tập:</p>
+        <div class="package-select">
+            <button class="pkg-btn active" id="pkg-1-5" onclick="selectPackage(1)">Gói 1 (Test 1 - 5)</button>
+            <button class="pkg-btn" id="pkg-6-10" onclick="selectPackage(2)">Gói 2 (Test 6 - 10)</button>
+        </div>
+
         <button class="btn btn-start" onclick="startApp()">VÀO THI NGAY!</button>
     </div>
 
@@ -245,185 +264,348 @@
 
 <script>
 /**
- * DỮ LIỆU CÂU HỎI (Đã gỡ bỏ toàn bộ dấu chấm, phẩy, hỏi chấm gây nhiễu + Cấp đủ từ bị thiếu)
+ * DỮ LIỆU CÂU HỎI TỔNG HỢP (TEST 1 -> 10)
+ * Mọi dấu câu (,.?) đã được loại bỏ. Từ khóa được cung cấp đủ cho dạng reorder.
  */
-const rawData = [
+const rawData1to5 = [
     // ================== BÀI TẬP SỐ 1 ==================
-    [1, "Task 1. Odd one out.", "mcq", "A. city B. town C. flat D. province", "C", "Flat (căn hộ) chỉ nơi ở cụ thể, các từ còn lại chỉ đơn vị hành chính/khu vực.", "A. city|B. town|C. flat|D. province"],
-    [1, "Task 1. Odd one out.", "mcq", "A. house B. far C. near D. modern", "A", "House là Danh từ, các từ còn lại là Tính từ.", "A. house|B. far|C. near|D. modern"],
-    [1, "Task 1. Odd one out.", "mcq", "A. small B. quiet C. noisy D. like", "D", "Like là Động từ, các từ còn lại là Tính từ miêu tả.", "A. small|B. quiet|C. noisy|D. like"],
-    [1, "Task 1. Odd one out.", "mcq", "A. can B. jump C. skip D. dance", "A", "Can là Động từ khuyết thiếu, còn lại là Động từ hành động thể chất.", "A. can|B. jump|C. skip|D. dance"],
-    [1, "Task 1. Odd one out.", "mcq", "A. exciting B. boring C. relaxed D. tiring", "C", "Relaxed là tính từ đuôi -ed (chỉ cảm xúc), còn lại là đuôi -ing (chỉ tính chất sự vật).", "A. exciting|B. boring|C. relaxed|D. tiring"],
-    [1, "Task 1. Odd one out.", "mcq", "A. geography B. country C. history D. ethics", "B", "Country (đất nước) không phải là môn học, còn lại là tên các môn học.", "A. geography|B. country|C. history|D. ethics"],
-    [1, "Task 2. Pronunciation.", "mcq", "A. windy B. sunny C. fly D. rainy", "C", "Chữ 'y' trong fly đọc là /aɪ/, còn lại đọc là /i/.", "A. windy|B. sunny|C. fly|D. rainy"],
-    [1, "Task 2. Pronunciation.", "mcq", "A. weather B. cream C. health D. headache", "B", "Chữ 'ea' trong cream đọc là /i:/, còn lại đọc là /e/.", "A. weather|B. cream|C. health|D. headache"],
-    [1, "Task 2. Pronunciation.", "mcq", "A. mouth B. cloud C. about D. your", "D", "Chữ 'ou' trong your đọc là /ɔ:/, còn lại đọc là /aʊ/.", "A. mouth|B. cloud|C. about|D. your"],
-    [1, "Task 2. Pronunciation.", "mcq", "A. cold B. hot C. sore D. body", "C", "Chữ 'o' trong sore đọc là /ɔ:/, khác với các từ còn lại.", "A. cold|B. hot|C. sore|D. body"],
-    [1, "Task 2. Pronunciation.", "mcq", "A. small B. sorry C. sure D. sometimes", "C", "Chữ 's' trong sure đọc là /ʃ/ (s nặng), còn lại là /s/ (s nhẹ).", "A. small|B. sorry|C. sure|D. sometimes"],
-    [1, "Task 3. Choose the best option.", "mcq", "Hanoi is a big ______ in the north.", "C", "Hà Nội là một thành phố (city).", "A. street|B. town|C. city|D. lane"],
-    [1, "Task 3. Choose the best option.", "mcq", "His ______ is 187B, Giang Vo Street.", "D", "Có số nhà và tên đường -> Đây là địa chỉ (address).", "A. class|B. road|C. town|D. address"],
-    [1, "Task 3. Choose the best option.", "mcq", "______ your favourite subject?", "C", "Cấu trúc hỏi: What is -> Viết tắt là What's.", "A. Which|B. What|C. What’s|D. Who"],
-    [1, "Task 3. Choose the best option.", "mcq", "What subject is he ______ now? - Vietnamese.", "C", "Có 'now' -> Hiện tại tiếp diễn: is + V-ing (learning).", "A. to learn|B. learn|C. learning|D. learned"],
-    [1, "Task 3. Choose the best option.", "mcq", "Linda: Who do you live ______? Mai: I live ______ my parents.", "C", "Sống cùng với ai dùng giới từ 'with'.", "A. in - in|B. for - for|C. with - with|D. at - at"],
-    [1, "Task 3. Choose the best option.", "mcq", "______ your friend like Vietnamese? Yes, she does.", "D", "Chủ ngữ 'your friend' số ít -> Mượn trợ động từ 'Does'.", "A. am|B. is|C. do|D. does"],
-    [1, "Task 3. Choose the best option.", "mcq", "I like math because I like ______.", "A", "Môn Toán liên quan đến việc giải quyết bài toán (solving problems).", "A. solving problems|B. doing experiments|C. making things|D. reading stories"],
-    [1, "Task 3. Choose the best option.", "mcq", "My father watches TV every day at 7 p.m. He ______ watches TV at 7 p.m.", "A", "Ngày nào cũng làm (every day) -> Tần suất 100% (always).", "A. always|B. usually|C. often|D. sometimes"],
-    // Sửa lỗi Reorder: Gỡ dấu chấm phẩy, kiểm tra đủ từ
-    [1, "Task 4. Put the words in correct order.", "reorder", "they/ do/ subjects/ Which/ like/ IT/ like/ They/ and/ Science", "Which subjects do they like They like IT and Science", "Câu hỏi: Từ để hỏi + trợ động từ + S + V?. Trả lời: S + V + O.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "exercise/ usually/ they/ get/ do/ morning/ up/ early/ and", "They usually get up early and do morning exercise", "Trạng từ chỉ tần suất (usually) đứng trước động từ thường (get up).", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "small/ quiet/ village/ and/ It/ is/ a", "It is a small and quiet village", "S + be + a/an + adj + and + adj + N.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "because/ He/ English/ likes/ he/ likes/ languages/ learning", "He likes English because he likes learning languages", "Dùng 'because' nối 2 mệnh đề nguyên nhân - kết quả.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "often/ we/ at/ stay/ and/ school/ homework/ do/ our/ afternoon/ the/ in", "We often stay at school and do our homework in the afternoon", "Cụm thời gian (in the afternoon) đứng cuối câu.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "cooks/ sometimes/ goes/ she/ shopping/ and/ school/ dinner/ after", "She sometimes goes shopping and cooks dinner after school", "Liệt kê hành động: goes shopping and cooks dinner.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "use/ They/ computers/ never/ PE/ in/ class", "They never use computers in PE class", "PE class là lớp Thể dục. Trạng ngữ nơi chốn đứng cuối.", ""],
-    [1, "Task 4. Put the words in correct order.", "reorder", "English/ at/ My/ class/ four/ to/ a/ starts/ quarter", "My English class starts at a quarter to four", "Cấu trúc giờ: a quarter to + số giờ (giờ kém 15).", ""],
+    [1, "Task 1. Odd one out", "mcq", "A city B town C flat D province", "C", "Flat (căn hộ) chỉ nơi ở cụ thể, các từ còn lại chỉ đơn vị hành chính/khu vực.", "A city|B town|C flat|D province"],
+    [1, "Task 1. Odd one out", "mcq", "A house B far C near D modern", "A", "House là Danh từ, các từ còn lại là Tính từ.", "A house|B far|C near|D modern"],
+    [1, "Task 1. Odd one out", "mcq", "A small B quiet C noisy D like", "D", "Like là Động từ, các từ còn lại là Tính từ miêu tả.", "A small|B quiet|C noisy|D like"],
+    [1, "Task 1. Odd one out", "mcq", "A can B jump C skip D dance", "A", "Can là Động từ khuyết thiếu, còn lại là Động từ hành động thể chất.", "A can|B jump|C skip|D dance"],
+    [1, "Task 1. Odd one out", "mcq", "A exciting B boring C relaxed D tiring", "C", "Relaxed là tính từ đuôi -ed (chỉ cảm xúc), còn lại là đuôi -ing (chỉ tính chất sự vật).", "A exciting|B boring|C relaxed|D tiring"],
+    [1, "Task 1. Odd one out", "mcq", "A geography B country C history D ethics", "B", "Country (đất nước) không phải là môn học, còn lại là tên các môn học.", "A geography|B country|C history|D ethics"],
+    [1, "Task 2. Pronunciation", "mcq", "A windy B sunny C fly D rainy", "C", "Chữ 'y' trong fly đọc là /aɪ/, còn lại đọc là /i/.", "A windy|B sunny|C fly|D rainy"],
+    [1, "Task 2. Pronunciation", "mcq", "A weather B cream C health D headache", "B", "Chữ 'ea' trong cream đọc là /i:/, còn lại đọc là /e/.", "A weather|B cream|C health|D headache"],
+    [1, "Task 2. Pronunciation", "mcq", "A mouth B cloud C about D your", "D", "Chữ 'ou' trong your đọc là /ɔ:/, còn lại đọc là /aʊ/.", "A mouth|B cloud|C about|D your"],
+    [1, "Task 2. Pronunciation", "mcq", "A cold B hot C sore D body", "C", "Chữ 'o' trong sore đọc là /ɔ:/, khác với các từ còn lại.", "A cold|B hot|C sore|D body"],
+    [1, "Task 2. Pronunciation", "mcq", "A small B sorry C sure D sometimes", "C", "Chữ 's' trong sure đọc là /ʃ/ (s nặng), còn lại là /s/ (s nhẹ).", "A small|B sorry|C sure|D sometimes"],
+    [1, "Task 3. Choose the best option", "mcq", "Hanoi is a big ______ in the north", "C", "Hà Nội là một thành phố (city).", "A street|B town|C city|D lane"],
+    [1, "Task 3. Choose the best option", "mcq", "His ______ is 187B Giang Vo Street", "D", "Có số nhà và tên đường -> Đây là địa chỉ (address).", "A class|B road|C town|D address"],
+    [1, "Task 3. Choose the best option", "mcq", "______ your favourite subject", "C", "Cấu trúc hỏi: What is -> Viết tắt là What's.", "A Which|B What|C What’s|D Who"],
+    [1, "Task 3. Choose the best option", "mcq", "What subject is he ______ now - Vietnamese", "C", "Có 'now' -> Hiện tại tiếp diễn: is + V-ing (learning).", "A to learn|B learn|C learning|D learned"],
+    [1, "Task 3. Choose the best option", "mcq", "Linda Who do you live ______ Mai I live ______ my parents", "C", "Sống cùng với ai dùng giới từ 'with'.", "A in - in|B for - for|C with - with|D at - at"],
+    [1, "Task 3. Choose the best option", "mcq", "______ your friend like Vietnamese Yes she does", "D", "Chủ ngữ 'your friend' số ít -> Mượn trợ động từ 'Does'.", "A am|B is|C do|D does"],
+    [1, "Task 3. Choose the best option", "mcq", "I like math because I like ______", "A", "Môn Toán liên quan đến việc giải quyết bài toán (solving problems).", "A solving problems|B doing experiments|C making things|D reading stories"],
+    [1, "Task 3. Choose the best option", "mcq", "My father watches TV every day at 7 pm He ______ watches TV at 7 pm", "A", "Ngày nào cũng làm (every day) -> Tần suất 100% (always).", "A always|B usually|C often|D sometimes"],
+    [1, "Task 4. Reorder", "reorder", "they/ do/ subjects/ Which/ like/ IT/ like/ They/ and/ Science", "Which subjects do they like They like IT and Science", "Câu hỏi: Từ để hỏi + trợ động từ + S + V?. Trả lời: S + V + O.", ""],
+    [1, "Task 4. Reorder", "reorder", "exercise/ usually/ they/ get/ do/ morning/ up/ early/ and", "They usually get up early and do morning exercise", "Trạng từ chỉ tần suất (usually) đứng trước động từ thường (get up).", ""],
+    [1, "Task 4. Reorder", "reorder", "small/ quiet/ village/ and/ It/ is/ a", "It is a small and quiet village", "S + be + a/an + adj + and + adj + N.", ""],
+    [1, "Task 4. Reorder", "reorder", "because/ He/ English/ likes/ he/ likes/ languages/ learning", "He likes English because he likes learning languages", "Dùng 'because' nối 2 mệnh đề nguyên nhân - kết quả.", ""],
+    [1, "Task 4. Reorder", "reorder", "often/ we/ at/ stay/ and/ school/ homework/ do/ our/ afternoon/ the/ in", "We often stay at school and do our homework in the afternoon", "Cụm thời gian (in the afternoon) đứng cuối câu.", ""],
+    [1, "Task 4. Reorder", "reorder", "cooks/ sometimes/ goes/ she/ shopping/ and/ school/ dinner/ after", "She sometimes goes shopping and cooks dinner after school", "Liệt kê hành động: goes shopping and cooks dinner.", ""],
+    [1, "Task 4. Reorder", "reorder", "use/ They/ computers/ never/ PE/ in/ class", "They never use computers in PE class", "PE class là lớp Thể dục. Trạng ngữ nơi chốn đứng cuối.", ""],
+    [1, "Task 4. Reorder", "reorder", "English/ at/ My/ class/ four/ to/ a/ starts/ quarter", "My English class starts at a quarter to four", "Cấu trúc giờ: a quarter to + số giờ (giờ kém 15).", ""],
 
     // ================== BÀI TẬP SỐ 2 ==================
-    [2, "Task 1. Odd one out.", "mcq", "A. holiday B. teachers C. children D. subjects", "A", "Holiday (kỳ nghỉ) không liên quan tới trường lớp như các từ còn lại.", "A. holiday|B. teachers|C. children|D. subjects"],
-    [2, "Task 1. Odd one out.", "mcq", "A. January B. April C. November D. month", "D", "Month là từ chung (tháng), còn lại là tên tháng cụ thể.", "A. January|B. April|C. November|D. month"],
-    [2, "Task 1. Odd one out.", "mcq", "A. subject B. holiday C. experiment D. exciting", "D", "Exciting là tính từ, các từ còn lại là danh từ.", "A. subject|B. holiday|C. experiment|D. exciting"],
-    [2, "Task 1. Odd one out.", "mcq", "A. her B. his C. they D. their", "C", "They là Đại từ nhân xưng, còn lại là Tính từ sở hữu.", "A. her|B. his|C. they|D. their"],
-    [2, "Task 1. Odd one out.", "mcq", "A. clock B. wardrobe C. picture D. eight", "D", "Eight là số đếm, còn lại là đồ vật.", "A. clock|B. wardrobe|C. picture|D. eight"],
-    [2, "Task 1. Odd one out.", "mcq", "A. solving B. problems C. using D. learning", "B", "Problems là danh từ số nhiều, còn lại là V-ing.", "A. solving|B. problems|C. using|D. learning"],
-    [2, "Task 1. Odd one out.", "mcq", "A. crowded B. country C. noisy D. modern", "B", "Country là danh từ, còn lại là tính từ.", "A. crowded|B. country|C. noisy|D. modern"],
-    [2, "Task 1. Odd one out.", "mcq", "A. pretty B. bad C. nine D. beautiful", "C", "Nine là số đếm, còn lại là tính từ.", "A. pretty|B. bad|C. nine|D. beautiful"],
-    [2, "Task 2. Pronunciation.", "mcq", "A. see B. where C. never D. get", "A", "Chữ 'ee' trong see đọc là /i:/, còn lại đọc là /e/.", "A. see|B. where|C. never|D. get"],
-    [2, "Task 2. Pronunciation.", "mcq", "A. trip B. did C. with D. nice", "D", "Chữ 'i' trong nice đọc là /aɪ/, còn lại là /ɪ/.", "A. trip|B. did|C. with|D. nice"],
-    [2, "Task 2. Pronunciation.", "mcq", "A. May B. play C. stay D. watch", "D", "Chữ 'a' trong watch đọc là /ɒ/, còn lại là /eɪ/.", "A. May|B. play|C. stay|D. watch"],
-    [2, "Task 2. Pronunciation.", "mcq", "A. back B. taxi C. last D. parents", "C", "Chữ 'a' trong last đọc là /ɑ:/, còn lại là /æ/.", "A. back|B. taxi|C. last|D. parents"],
-    [2, "Task 2. Pronunciation.", "mcq", "A. coach B. cinema C. come D. country", "B", "Chữ 'c' trong cinema đọc là /s/, còn lại là /k/.", "A. coach|B. cinema|C. come|D. country"],
-    [2, "Task 3. Choose the best option.", "mcq", "What does your mother ______ in the evening? - She ______ me with my homework.", "A", "Câu hỏi dùng trợ động từ does -> V nguyên thể (do). Trả lời chủ ngữ số ít (She) -> V thêm s/es (helps).", "A. do – help|B. do – helps|C. does – helps|D. does – help"],
-    [2, "Task 3. Choose the best option.", "mcq", "They usually ______ early and do morning exercise.", "B", "Chủ ngữ số nhiều 'They' -> Động từ nguyên thể (get up).", "A. gets on|B. get up|C. get on|D. gets up"],
-    [2, "Task 3. Choose the best option.", "mcq", "Mary often ______ TV after dinner with her parents.", "C", "Chủ ngữ số ít 'Mary' -> Động từ thêm 'es' (watches).", "A. watch|B. to watch|C. watches|D. watchs"],
-    [2, "Task 3. Choose the best option.", "mcq", "What is your favourite holiday?", "C", "Holiday là ngày lễ -> New Year.", "A. It’s English|B. It’s Music|C. It’s New Year|D. It’s Art"],
-    [2, "Task 3. Choose the best option.", "mcq", "How do you say “30/4” in English?", "C", "Ngày 30/4 là April thirtieth.", "A. June thirtieth|B. May thirtieth|C. April thirtieth|D. August thirtieth"],
-    [2, "Task 3. Choose the best option.", "mcq", "Could you ______ the presents?", "C", "Hành động đi với quà (presents) là wrap (gói quà).", "A. blow up|B. make up|C. wrap|D. invite"],
-    [2, "Task 3. Choose the best option.", "mcq", "______ did you go on holiday?", "B", "Hỏi về nơi chốn đi nghỉ -> Where.", "A. What|B. Where|C. Which|D. How many"],
-    [2, "Task 3. Choose the best option.", "mcq", "______ do you go to the sea? - Once a month.", "D", "Trả lời chỉ tần suất (Once a month) -> Hỏi bằng How often.", "A. How long|B. how far|C. how many|D. how often"],
-    [2, "Task 3. Choose the best option.", "mcq", "Where ______ you last summer?", "C", "Quá khứ đơn (last summer), S là 'you' -> to be là 'were'.", "A. are|B. was|C. were|D. is"],
-    // Sửa lỗi thiếu chữ (Q59 và các câu khác), gỡ dấu câu
-    [2, "Task 4. Put the words in correct order.", "reorder", "island/ get/ did/ family/ how/ your/ to/ Phu/ Quoc", "How did your family get to Phu Quoc island", "Hỏi phương tiện trong quá khứ: How did + S + get to + Place?", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "is/ What/ holiday/ her/ favourite/ Lunar/ It/ New/ is/ Year", "What is her favourite holiday It is Lunar New Year", "Mẫu câu hỏi sở thích: What is + TTSH + favourite + Danh từ?", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "get/ up/ breakfast/ time/ father/ and/ your/ have/ what/ does", "What time does your father get up and have breakfast", "Hỏi giờ: What time + does + S + V?", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "every/ school/ Jane/ morning/ eight/ to/ oclock/ goes/ at", "Jane goes to school at eight oclock every morning", "Thời gian cụ thể (at 8 oclock) đứng trước thời gian chung chung (every morning).", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "balloons/ you/ Could/ the/ up/ blow/ Yes/ sure", "Could you blow up the balloons Yes sure", "Yêu cầu lịch sự: Could you + V nguyên thể? (blow up = thổi).", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "Hoa/ birthday/ to/ her/ invited/ Minh/ party", "Hoa invited Minh to her birthday party", "Cấu trúc: invite sb to sth (mời ai tới đâu).", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "celebrate/ people/ do/ do/ What/ to/ Christmas/ Day", "What do people do to celebrate Christmas Day", "Từ để hỏi + do + S + do + to + V?", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "my/ I/ and/ brother/ the/ wrap/ presents/ Tonys/ birthday/ for", "I and my brother wrap the presents for Tonys birthday", "S (I and my brother) + V (wrap) + O (presents).", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "countryside/ We/ picnic/ will/ for/ a/ in/ go/ the", "We will go for a picnic in the countryside", "Go for a picnic (đi dã ngoại). In the countryside (ở vùng quê).", ""],
-    [2, "Task 4. Put the words in correct order.", "reorder", "is/ Christmas/ on/ the/ twenty/ fifth/ of/ December", "Christmas is on the twenty fifth of December", "Đọc ngày tháng: on the + ngày (số thứ tự) + of + tháng.", ""], // ĐÃ SỬA: Bổ sung "the", "of"
+    [2, "Task 1. Odd one out", "mcq", "A holiday B teachers C children D subjects", "A", "Holiday (kỳ nghỉ) không liên quan tới trường lớp như các từ còn lại.", "A holiday|B teachers|C children|D subjects"],
+    [2, "Task 1. Odd one out", "mcq", "A January B April C November D month", "D", "Month là từ chung (tháng), còn lại là tên tháng cụ thể.", "A January|B April|C November|D month"],
+    [2, "Task 1. Odd one out", "mcq", "A subject B holiday C experiment D exciting", "D", "Exciting là tính từ, các từ còn lại là danh từ.", "A subject|B holiday|C experiment|D exciting"],
+    [2, "Task 1. Odd one out", "mcq", "A her B his C they D their", "C", "They là Đại từ nhân xưng, còn lại là Tính từ sở hữu.", "A her|B his|C they|D their"],
+    [2, "Task 1. Odd one out", "mcq", "A clock B wardrobe C picture D eight", "D", "Eight là số đếm, còn lại là đồ vật.", "A clock|B wardrobe|C picture|D eight"],
+    [2, "Task 1. Odd one out", "mcq", "A solving B problems C using D learning", "B", "Problems là danh từ số nhiều, còn lại là V-ing.", "A solving|B problems|C using|D learning"],
+    [2, "Task 1. Odd one out", "mcq", "A crowded B country C noisy D modern", "B", "Country là danh từ, còn lại là tính từ.", "A crowded|B country|C noisy|D modern"],
+    [2, "Task 1. Odd one out", "mcq", "A pretty B bad C nine D beautiful", "C", "Nine là số đếm, còn lại là tính từ.", "A pretty|B bad|C nine|D beautiful"],
+    [2, "Task 2. Pronunciation", "mcq", "A see B where C never D get", "A", "Chữ 'ee' trong see đọc là /i:/, còn lại đọc là /e/.", "A see|B where|C never|D get"],
+    [2, "Task 2. Pronunciation", "mcq", "A trip B did C with D nice", "D", "Chữ 'i' trong nice đọc là /aɪ/, còn lại là /ɪ/.", "A trip|B did|C with|D nice"],
+    [2, "Task 2. Pronunciation", "mcq", "A May B play C stay D watch", "D", "Chữ 'a' trong watch đọc là /ɒ/, còn lại là /eɪ/.", "A May|B play|C stay|D watch"],
+    [2, "Task 2. Pronunciation", "mcq", "A back B taxi C last D parents", "C", "Chữ 'a' trong last đọc là /ɑ:/, còn lại là /æ/.", "A back|B taxi|C last|D parents"],
+    [2, "Task 2. Pronunciation", "mcq", "A coach B cinema C come D country", "B", "Chữ 'c' trong cinema đọc là /s/, còn lại là /k/.", "A coach|B cinema|C come|D country"],
+    [2, "Task 3. Choose the best option", "mcq", "What does your mother ______ in the evening - She ______ me with my homework", "A", "Câu hỏi dùng trợ động từ does -> V nguyên thể (do). Trả lời chủ ngữ số ít (She) -> V thêm s/es (helps).", "A do – help|B do – helps|C does – helps|D does – help"],
+    [2, "Task 3. Choose the best option", "mcq", "They usually ______ early and do morning exercise", "B", "Chủ ngữ số nhiều 'They' -> Động từ nguyên thể (get up).", "A gets on|B get up|C get on|D gets up"],
+    [2, "Task 3. Choose the best option", "mcq", "Mary often ______ TV after dinner with her parents", "C", "Chủ ngữ số ít 'Mary' -> Động từ thêm 'es' (watches).", "A watch|B to watch|C watches|D watchs"],
+    [2, "Task 3. Choose the best option", "mcq", "What is your favourite holiday", "C", "Holiday là ngày lễ -> New Year.", "A It’s English|B It’s Music|C It’s New Year|D It’s Art"],
+    [2, "Task 3. Choose the best option", "mcq", "How do you say 30/4 in English", "C", "Ngày 30/4 là April thirtieth.", "A June thirtieth|B May thirtieth|C April thirtieth|D August thirtieth"],
+    [2, "Task 3. Choose the best option", "mcq", "Could you ______ the presents", "C", "Hành động đi với quà (presents) là wrap (gói quà).", "A blow up|B make up|C wrap|D invite"],
+    [2, "Task 3. Choose the best option", "mcq", "______ did you go on holiday", "B", "Hỏi về nơi chốn đi nghỉ -> Where.", "A What|B Where|C Which|D How many"],
+    [2, "Task 3. Choose the best option", "mcq", "______ do you go to the sea - Once a month", "D", "Trả lời chỉ tần suất (Once a month) -> Hỏi bằng How often.", "A How long|B how far|C how many|D how often"],
+    [2, "Task 3. Choose the best option", "mcq", "Where ______ you last summer", "C", "Quá khứ đơn (last summer), S là 'you' -> to be là 'were'.", "A are|B was|C were|D is"],
+    [2, "Task 4. Reorder", "reorder", "island/ get/ did/ family/ how/ your/ to/ Phu/ Quoc", "How did your family get to Phu Quoc island", "Hỏi phương tiện trong quá khứ: How did + S + get to + Place?", ""],
+    [2, "Task 4. Reorder", "reorder", "is/ What/ holiday/ her/ favourite/ Lunar/ It/ New/ is/ Year", "What is her favourite holiday It is Lunar New Year", "Mẫu câu hỏi sở thích: What is + TTSH + favourite + Danh từ?", ""],
+    [2, "Task 4. Reorder", "reorder", "get/ up/ breakfast/ time/ father/ and/ your/ have/ what/ does", "What time does your father get up and have breakfast", "Hỏi giờ: What time + does + S + V?", ""],
+    [2, "Task 4. Reorder", "reorder", "every/ school/ Jane/ morning/ eight/ to/ oclock/ goes/ at", "Jane goes to school at eight oclock every morning", "Thời gian cụ thể (at 8 oclock) đứng trước thời gian chung chung (every morning).", ""],
+    [2, "Task 4. Reorder", "reorder", "balloons/ you/ Could/ the/ up/ blow/ Yes/ sure", "Could you blow up the balloons Yes sure", "Yêu cầu lịch sự: Could you + V nguyên thể? (blow up = thổi).", ""],
+    [2, "Task 4. Reorder", "reorder", "Hoa/ birthday/ to/ her/ invited/ Minh/ party", "Hoa invited Minh to her birthday party", "Cấu trúc: invite sb to sth (mời ai tới đâu).", ""],
+    [2, "Task 4. Reorder", "reorder", "celebrate/ people/ do/ do/ What/ to/ Christmas/ Day", "What do people do to celebrate Christmas Day", "Từ để hỏi + do + S + do + to + V?", ""],
+    [2, "Task 4. Reorder", "reorder", "my/ I/ and/ brother/ the/ wrap/ presents/ Tonys/ birthday/ for", "I and my brother wrap the presents for Tonys birthday", "S (I and my brother) + V (wrap) + O (presents).", ""],
+    [2, "Task 4. Reorder", "reorder", "countryside/ We/ picnic/ will/ for/ a/ in/ go/ the", "We will go for a picnic in the countryside", "Go for a picnic (đi dã ngoại). In the countryside (ở vùng quê).", ""],
+    [2, "Task 4. Reorder", "reorder", "is/ Christmas/ on/ the/ twenty/ fifth/ of/ December", "Christmas is on the twenty fifth of December", "Đọc ngày tháng: on the + ngày (số thứ tự) + of + tháng.", ""],
 
     // ================== BÀI TẬP SỐ 3 ==================
-    [3, "Task 1. Odd one out.", "mcq", "A. building B. flat C. America D. tower", "C", "America là tên quốc gia, còn lại là các loại công trình kiến trúc/nhà ở.", "A. building|B. flat|C. America|D. tower"],
-    [3, "Task 1. Odd one out.", "mcq", "A. Japanese B. China C. American D. Malaysian", "B", "China là quốc gia, còn lại là quốc tịch (có đuôi -ese, -an).", "A. Japanese|B. China|C. American|D. Malaysian"],
-    [3, "Task 1. Odd one out.", "mcq", "A. nationality B. active C. clever D. friendly", "A", "Nationality là Danh từ, còn lại là Tính từ chỉ tính cách.", "A. nationality|B. active|C. clever|D. friendly"],
-    [3, "Task 1. Odd one out.", "mcq", "A. firefighter B. reporter C. gardener D. butter", "D", "Butter (bơ) là thức ăn, còn lại là danh từ chỉ nghề nghiệp.", "A. firefighter|B. reporter|C. gardener|D. butter"],
-    [3, "Task 1. Odd one out.", "mcq", "A. teach B. teachers C. children D. students", "A", "Teach là động từ (dạy), còn lại là danh từ chỉ người.", "A. teach|B. teachers|C. children|D. students"],
-    [3, "Task 1. Odd one out.", "mcq", "A. paper B. invite C. blow D. wrap", "A", "Paper là danh từ (giấy), còn lại là động từ hành động.", "A. paper|B. invite|C. blow|D. wrap"],
-    [3, "Task 2. Pronunciation.", "mcq", "A. fun B. ruler C. number D. subject", "B", "Chữ 'u' trong ruler đọc là /u:/, còn lại đọc là /ʌ/.", "A. fun|B. ruler|C. number|D. subject"],
-    [3, "Task 2. Pronunciation.", "mcq", "A. station B. cinema C. place D. late", "B", "Chữ 'a' trong cinema đọc là /ə/, còn lại đọc là /eɪ/.", "A. station|B. cinema|C. place|D. late"],
-    [3, "Task 2. Pronunciation.", "mcq", "A. teach B. eat C. please D. year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A. teach|B. eat|C. please|D. year"],
-    [3, "Task 2. Pronunciation.", "mcq", "A. city B. live C. ski D. time", "D", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/ hoặc /i:/.", "A. city|B. live|C. ski|D. time"],
-    [3, "Task 2. Pronunciation.", "mcq", "A. night B. giraffe C. tiger D. time", "B", "Chữ 'i' trong giraffe đọc là /ɪ/, còn lại đọc là /aɪ/.", "A. night|B. giraffe|C. tiger|D. time"],
-    [3, "Task 3. Choose the best option.", "mcq", "______ brother’s name is Phong.", "A", "Cần Tính từ sở hữu đứng trước danh từ -> My.", "A. my|B. mine|C. him|D. yours"],
-    [3, "Task 3. Choose the best option.", "mcq", "Lan is sitting ______ Hoa and Hue.", "C", "Có 'and' nối 2 người -> Dùng between (ở giữa).", "A. next|B. to|C. between|D. in"],
-    [3, "Task 3. Choose the best option.", "mcq", "There are some pictures ______ the wall.", "A", "Treo trên tường dùng giới từ 'on'.", "A. on|B. in|C. at|D. to"],
-    [3, "Task 3. Choose the best option.", "mcq", "______ were you yesterday evening? I was at home.", "C", "Trả lời 'at home' (ở nhà) -> Hỏi về nơi chốn (Where).", "A. When|B. Who|C. Where|D. How"],
-    [3, "Task 3. Choose the best option.", "mcq", "They ______ at Hoa’s birthday party yesterday.", "D", "Quá khứ 'yesterday', S số nhiều 'They' -> to be là 'were'.", "A. am|B. is|C. are|D. were"],
-    [3, "Task 3. Choose the best option.", "mcq", "Could you invite ______?", "B", "Mời (invite) thì phải là mời bạn bè (friends).", "A. a cake|B. friends|C. presents|D. candy"],
-    [3, "Task 3. Choose the best option.", "mcq", "He hits the ball very ______.", "A", "Trạng từ của 'hard' vẫn là 'hard' (mạnh/chăm chỉ). 'Hardly' mang nghĩa là hầu như không.", "A. hard|B. hardly|C. slow|D. quick"],
-    [3, "Task 3. Choose the best option.", "mcq", "They ______ football yesterday afternoon.", "D", "Dấu hiệu quá khứ 'yesterday' -> V thêm -ed (played).", "A. play|B. plays|C. playes|D. played"],
-    [3, "Task 3. Choose the best option.", "mcq", "They ______ mineral water in the birthday party last weekend.", "A", "Quá khứ đơn 'last weekend'. Động từ bất quy tắc drink -> drank.", "A. drank|B. drink|C. drinked|D. drinks"],
-    [3, "Task 3. Choose the best option.", "mcq", "The tigers are so ______.", "D", "Tính từ miêu tả con hổ -> scary (đáng sợ).", "A. delicious|B. yucky|C. badly|D. scary"],
-    // Sửa lỗi reorder
-    [3, "Task 4. Put the words in correct order.", "reorder", "do/ like/ doing/ What/ you/ your/ in/ time/ free", "What do you like doing in your free time", "Cấu trúc hỏi sở thích lúc rảnh: What do you like doing in your free time?", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "coffee/ was/ I/ a/ at/ shop/ delicious/ The/ were/ drinks", "I was at a coffee shop The drinks were delicious", "Ghép 2 câu đơn giản miêu tả quá khứ.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "baked/ My/ cupcakes/ for/ mother/ my/ birthday/ night/ last", "My mother baked cupcakes for my birthday last night", "S (My mother) + V (baked cupcakes) + Mục đích + Thời gian.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "would/ in/ you/ What/ like/ the/ to/ be/ future", "What would you like to be in the future", "Cấu trúc hỏi nghề nghiệp tương lai.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "My/ TV/ sister/ cartoon/ always/ English/ on/ watches", "My sister always watches English cartoon on TV", "S + adv tần suất (always) + V + O + on TV.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "your/ Why/ learn/ does/ father/ English", "Why does your father learn English", "Câu hỏi lý do: Why + trợ ĐT + S + V?", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "very/ because/ I/ him/ he/ clever/ like/ much/ is/ and/ brave", "I like him very much because he is clever and brave", "Mệnh đề nguyên nhân kết quả nối bằng because.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "at/ Tony/ the/ was/ stadium/ Sunday/ last/ It/ noisy/ was", "Tony was at the stadium last Sunday It was noisy", "Cấu trúc to be quá khứ đơn miêu tả địa điểm và tính chất.", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "do/ Why/ like/ you/ New/ Year/ Lunar/ Because/ watch/ I/ fireworks/ can", "Why do you like Lunar New Year Because I can watch fireworks", "Hỏi lý do và trả lời bằng Because I can...", ""],
-    [3, "Task 4. Put the words in correct order.", "reorder", "learns/ well/ geography/ He/ very/ He/ grade/ gets/ A", "He learns geography very well He gets grade A", "Miêu tả hành động tốt (learn well) dẫn đến kết quả tốt (gets grade A).", ""],
+    [3, "Task 1. Odd one out", "mcq", "A building B flat C America D tower", "C", "America là tên quốc gia, còn lại là các loại công trình kiến trúc/nhà ở.", "A building|B flat|C America|D tower"],
+    [3, "Task 1. Odd one out", "mcq", "A Japanese B China C American D Malaysian", "B", "China là quốc gia, còn lại là quốc tịch (có đuôi -ese, -an).", "A Japanese|B China|C American|D Malaysian"],
+    [3, "Task 1. Odd one out", "mcq", "A nationality B active C clever D friendly", "A", "Nationality là Danh từ, còn lại là Tính từ chỉ tính cách.", "A nationality|B active|C clever|D friendly"],
+    [3, "Task 1. Odd one out", "mcq", "A firefighter B reporter C gardener D butter", "D", "Butter (bơ) là thức ăn, còn lại là danh từ chỉ nghề nghiệp.", "A firefighter|B reporter|C gardener|D butter"],
+    [3, "Task 1. Odd one out", "mcq", "A teach B teachers C children D students", "A", "Teach là động từ (dạy), còn lại là danh từ chỉ người.", "A teach|B teachers|C children|D students"],
+    [3, "Task 1. Odd one out", "mcq", "A paper B invite C blow D wrap", "A", "Paper là danh từ (giấy), còn lại là động từ hành động.", "A paper|B invite|C blow|D wrap"],
+    [3, "Task 2. Pronunciation", "mcq", "A fun B ruler C number D subject", "B", "Chữ 'u' trong ruler đọc là /u:/, còn lại đọc là /ʌ/.", "A fun|B ruler|C number|D subject"],
+    [3, "Task 2. Pronunciation", "mcq", "A station B cinema C place D late", "B", "Chữ 'a' trong cinema đọc là /ə/, còn lại đọc là /eɪ/.", "A station|B cinema|C place|D late"],
+    [3, "Task 2. Pronunciation", "mcq", "A teach B eat C please D year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A teach|B eat|C please|D year"],
+    [3, "Task 2. Pronunciation", "mcq", "A city B live C ski D time", "D", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/ hoặc /i:/.", "A city|B live|C ski|D time"],
+    [3, "Task 2. Pronunciation", "mcq", "A night B giraffe C tiger D time", "B", "Chữ 'i' trong giraffe đọc là /ɪ/, còn lại đọc là /aɪ/.", "A night|B giraffe|C tiger|D time"],
+    [3, "Task 3. Choose the best option", "mcq", "______ brother’s name is Phong", "A", "Cần Tính từ sở hữu đứng trước danh từ -> My.", "A my|B mine|C him|D yours"],
+    [3, "Task 3. Choose the best option", "mcq", "Lan is sitting ______ Hoa and Hue", "C", "Có 'and' nối 2 người -> Dùng between (ở giữa).", "A next|B to|C between|D in"],
+    [3, "Task 3. Choose the best option", "mcq", "There are some pictures ______ the wall", "A", "Treo trên tường dùng giới từ 'on'.", "A on|B in|C at|D to"],
+    [3, "Task 3. Choose the best option", "mcq", "______ were you yesterday evening I was at home", "C", "Trả lời 'at home' (ở nhà) -> Hỏi về nơi chốn (Where).", "A When|B Who|C Where|D How"],
+    [3, "Task 3. Choose the best option", "mcq", "They ______ at Hoa’s birthday party yesterday", "D", "Quá khứ 'yesterday', S số nhiều 'They' -> to be là 'were'.", "A am|B is|C are|D were"],
+    [3, "Task 3. Choose the best option", "mcq", "Could you invite ______", "B", "Mời (invite) thì phải là mời bạn bè (friends).", "A a cake|B friends|C presents|D candy"],
+    [3, "Task 3. Choose the best option", "mcq", "He hits the ball very ______", "A", "Trạng từ của 'hard' vẫn là 'hard' (mạnh/chăm chỉ). 'Hardly' mang nghĩa là hầu như không.", "A hard|B hardly|C slow|D quick"],
+    [3, "Task 3. Choose the best option", "mcq", "They ______ football yesterday afternoon", "D", "Dấu hiệu quá khứ 'yesterday' -> V thêm -ed (played).", "A play|B plays|C playes|D played"],
+    [3, "Task 3. Choose the best option", "mcq", "They ______ mineral water in the birthday party last weekend", "A", "Quá khứ đơn 'last weekend'. Động từ bất quy tắc drink -> drank.", "A drank|B drink|C drinked|D drinks"],
+    [3, "Task 3. Choose the best option", "mcq", "The tigers are so ______", "D", "Tính từ miêu tả con hổ -> scary (đáng sợ).", "A delicious|B yucky|C badly|D scary"],
+    [3, "Task 4. Reorder", "reorder", "do/ like/ doing/ What/ you/ your/ in/ time/ free", "What do you like doing in your free time", "Cấu trúc hỏi sở thích lúc rảnh: What do you like doing in your free time?", ""],
+    [3, "Task 4. Reorder", "reorder", "coffee/ was/ I/ a/ at/ shop/ delicious/ The/ were/ drinks", "I was at a coffee shop The drinks were delicious", "Ghép 2 câu đơn giản miêu tả quá khứ.", ""],
+    [3, "Task 4. Reorder", "reorder", "baked/ My/ cupcakes/ for/ mother/ my/ birthday/ night/ last", "My mother baked cupcakes for my birthday last night", "S (My mother) + V (baked cupcakes) + Mục đích + Thời gian.", ""],
+    [3, "Task 4. Reorder", "reorder", "would/ in/ you/ What/ like/ the/ to/ be/ future", "What would you like to be in the future", "Cấu trúc hỏi nghề nghiệp tương lai.", ""],
+    [3, "Task 4. Reorder", "reorder", "My/ TV/ sister/ cartoon/ always/ English/ on/ watches", "My sister always watches English cartoon on TV", "S + adv tần suất (always) + V + O + on TV.", ""],
+    [3, "Task 4. Reorder", "reorder", "your/ Why/ learn/ does/ father/ English", "Why does your father learn English", "Câu hỏi lý do: Why + trợ ĐT + S + V?", ""],
+    [3, "Task 4. Reorder", "reorder", "very/ because/ I/ him/ he/ clever/ like/ much/ is/ and/ brave", "I like him very much because he is clever and brave", "Mệnh đề nguyên nhân kết quả nối bằng because.", ""],
+    [3, "Task 4. Reorder", "reorder", "at/ Tony/ the/ was/ stadium/ Sunday/ last/ It/ noisy/ was", "Tony was at the stadium last Sunday It was noisy", "Cấu trúc to be quá khứ đơn miêu tả địa điểm và tính chất.", ""],
+    [3, "Task 4. Reorder", "reorder", "do/ Why/ like/ you/ New/ Year/ Lunar/ Because/ watch/ I/ fireworks/ can", "Why do you like Lunar New Year Because I can watch fireworks", "Hỏi lý do và trả lời bằng Because I can...", ""],
+    [3, "Task 4. Reorder", "reorder", "learns/ well/ geography/ He/ very/ He/ grade/ gets/ A", "He learns geography very well He gets grade A", "Miêu tả hành động tốt (learn well) dẫn đến kết quả tốt (gets grade A).", ""],
 
     // ================== BÀI TẬP SỐ 4 ==================
-    [4, "Task 1. Odd one out.", "mcq", "A. projects B. problems C. solves D. experiments", "C", "Solves là Động từ thêm 's', còn lại là Danh từ số nhiều.", "A. projects|B. problems|C. solves|D. experiments"],
-    [4, "Task 1. Odd one out.", "mcq", "A. where B. whose C. which D. want", "D", "Want là động từ, còn lại là Từ để hỏi (Wh-words).", "A. where|B. whose|C. which|D. want"],
-    [4, "Task 1. Odd one out.", "mcq", "A. square B. above C. beside D. in front of", "A", "Square là danh từ (hình vuông/quảng trường), còn lại là giới từ chỉ vị trí.", "A. square|B. above|C. beside|D. in front of"],
-    [4, "Task 1. Odd one out.", "mcq", "A. glue stick B. school C. set square D. crayon", "B", "School (trường học), còn lại là các dụng cụ học tập nhỏ.", "A. glue stick|B. school|C. set square|D. crayon"],
-    [4, "Task 1. Odd one out.", "mcq", "A. aquarium B. campsite C. funfair D. around", "D", "Around là giới từ/trạng từ, còn lại là danh từ chỉ địa điểm vui chơi.", "A. aquarium|B. campsite|C. funfair|D. around"],
-    [4, "Task 1. Odd one out.", "mcq", "A. rarely B. never C. ethics D. often", "C", "Ethics (môn Đạo đức) là danh từ, còn lại là trạng từ tần suất.", "A. rarely|B. never|C. ethics|D. often"],
-    [4, "Task 2. Pronunciation.", "mcq", "A. headache B. toothache C. watch D. stomach ache", "C", "Chữ 'ch' trong watch đọc là /tʃ/, còn trong các từ bệnh tật (ache) đọc là /k/.", "A. headache|B. toothache|C. watch|D. stomach ache"],
-    [4, "Task 2. Pronunciation.", "mcq", "A. teach B. eat C. please D. year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A. teach|B. eat|C. please|D. year"],
-    [4, "Task 2. Pronunciation.", "mcq", "A. brush B. music C. struck D. bus", "B", "Chữ 'u' trong music đọc là /ju:/, còn lại đọc là /ʌ/.", "A. brush|B. music|C. struck|D. bus"],
-    [4, "Task 2. Pronunciation.", "mcq", "A. plane B. bank C. paddy D. Math", "A", "Chữ 'a' trong plane đọc là /eɪ/, còn lại đọc là /æ/.", "A. plane|B. bank|C. paddy|D. Math"],
-    [4, "Task 2. Pronunciation.", "mcq", "A. hour B. house C. help D. home", "A", "Chữ 'h' trong hour là âm câm, còn lại được phát âm /h/.", "A. hour|B. house|C. help|D. home"],
-    [4, "Task 3. Choose the best option.", "mcq", "What do people do to celebrate Christmas? They ______ a Christmas tree.", "C", "Trang trí/dựng cây thông Noel dùng động từ 'put up' hoặc 'decorate'.", "A. wear|B. watch|C. put up|D. blow up"],
-    [4, "Task 3. Choose the best option.", "mcq", "Why would you like to be a reporter. Because I'd like to ______.", "B", "Phóng viên (reporter) thì công việc là báo cáo tin tức (report the news).", "A. grow flowers|B. report the news|C. teach children|D. write stories"],
-    [4, "Task 3. Choose the best option.", "mcq", "When is Children’s day? It’s on ______.", "D", "Ngày Quốc tế Thiếu nhi: June 1st (June first).", "A. June one|B. June second|C. June third|D. June first"],
-    [4, "Task 3. Choose the best option.", "mcq", "Did they go to Ba Na hills last weekend?", "C", "Câu hỏi dạng Yes/No với Did -> Trả lời Yes, they did.", "A. Yes, they do|B. Yes, they are|C. Yes, they did|D. Yes, they were"],
-    [4, "Task 3. Choose the best option.", "mcq", "______ he eat chicken last night?", "D", "Có 'last night' -> Quá khứ đơn -> Dùng trợ động từ Did.", "A. is|B. Does|C. Do|D. Did"],
-    [4, "Task 3. Choose the best option.", "mcq", "______ the matter with you?", "C", "Mẫu câu hỏi thăm sức khỏe: What's the matter with you?", "A. What|B. what’s|C. What’s|D. What’re"],
-    [4, "Task 3. Choose the best option.", "mcq", "I ______ a headache.", "A", "Nói về bệnh tật: I have + a/an + tên bệnh.", "A. have|B. has|C. had|D. am"],
-    [4, "Task 3. Choose the best option.", "mcq", "What’s the weather like ______ summer?", "C", "Đứng trước danh từ chỉ mùa (summer) dùng giới từ 'in'.", "A. on|B. is|C. in|D. to"],
-    [4, "Task 3. Choose the best option.", "mcq", "It’s ______ hot and sunny in summer.", "D", "Cần trạng từ tần suất để bổ nghĩa (usually: thường xuyên).", "A. in|B. on|C. to|D. usually"],
-    [4, "Task 3. Choose the best option.", "mcq", "What food will you ______ at the party?", "A", "Sau 'will' dùng động từ nguyên thể (have).", "A. have|B. having|C. to have|D. had"],
-    // Reorder
-    [4, "Task 4. Put the words in correct order.", "reorder", "you/ walk/ beach/ Did/ on/ last/ the/ Sunday", "Did you walk on the beach last Sunday", "Câu hỏi Yes/No quá khứ: Did + S + V + Nơi chốn + Thời gian?", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "didn't/ He/ river/ go/ the/ to/ went/ He/ beach/ to/ the", "He didn't go to the river He went to the beach", "Câu phủ định quá khứ dùng didn't + V nguyên thể.", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "he/ have/ Did/ a/ in/ barbecue/ garden/ the/ yesterday", "Did he have a barbecue in the garden yesterday", "Tổ chức tiệc nướng: have a barbecue.", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "you/ decorate/ Will/ for/ the/ Tet/ house", "Will you decorate the house for Tet", "Câu hỏi tương lai đơn: Will + S + V + O?", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "going/ to/ a/ festival/ I’m/ flower/ Tet/ at", "I'm going to a flower festival at Tet", "Tương lai gần/dự định: I'm going to + địa điểm.", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "eats/ food/ healthy/ She/ to/ healthy/ stay", "She eats healthy food to stay healthy", "Chỉ mục đích dùng 'to + V' (to stay healthy).", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "brother/ once/ My/ basketball/ a/ plays/ week", "My brother plays basketball once a week", "Trạng từ tần suất cụ thể (once a week) đứng cuối câu.", ""],
-    [4, "Task 4. Put the words in correct order.", "reorder", "is/ What/ you/ matter/ the/ with/ have/ I/ headache/ a", "What is the matter with you I have a headache", "Mẫu câu giao tiếp cơ bản đi khám bệnh.", ""],
+    [4, "Task 1. Odd one out", "mcq", "A projects B problems C solves D experiments", "C", "Solves là Động từ thêm 's', còn lại là Danh từ số nhiều.", "A projects|B problems|C solves|D experiments"],
+    [4, "Task 1. Odd one out", "mcq", "A where B whose C which D want", "D", "Want là động từ, còn lại là Từ để hỏi (Wh-words).", "A where|B whose|C which|D want"],
+    [4, "Task 1. Odd one out", "mcq", "A square B above C beside D in front of", "A", "Square là danh từ (hình vuông/quảng trường), còn lại là giới từ chỉ vị trí.", "A square|B above|C beside|D in front of"],
+    [4, "Task 1. Odd one out", "mcq", "A glue stick B school C set square D crayon", "B", "School (trường học), còn lại là các dụng cụ học tập nhỏ.", "A glue stick|B school|C set square|D crayon"],
+    [4, "Task 1. Odd one out", "mcq", "A aquarium B campsite C funfair D around", "D", "Around là giới từ/trạng từ, còn lại là danh từ chỉ địa điểm vui chơi.", "A aquarium|B campsite|C funfair|D around"],
+    [4, "Task 1. Odd one out", "mcq", "A rarely B never C ethics D often", "C", "Ethics (môn Đạo đức) là danh từ, còn lại là trạng từ tần suất.", "A rarely|B never|C ethics|D often"],
+    [4, "Task 2. Pronunciation", "mcq", "A headache B toothache C watch D stomach ache", "C", "Chữ 'ch' trong watch đọc là /tʃ/, còn trong các từ bệnh tật (ache) đọc là /k/.", "A headache|B toothache|C watch|D stomach ache"],
+    [4, "Task 2. Pronunciation", "mcq", "A teach B eat C please D year", "D", "Chữ 'ea' trong year đọc là /ɪə/, còn lại đọc là /i:/.", "A teach|B eat|C please|D year"],
+    [4, "Task 2. Pronunciation", "mcq", "A brush B music C struck D bus", "B", "Chữ 'u' trong music đọc là /ju:/, còn lại đọc là /ʌ/.", "A brush|B music|C struck|D bus"],
+    [4, "Task 2. Pronunciation", "mcq", "A plane B bank C paddy D Math", "A", "Chữ 'a' trong plane đọc là /eɪ/, còn lại đọc là /æ/.", "A plane|B bank|C paddy|D Math"],
+    [4, "Task 2. Pronunciation", "mcq", "A hour B house C help D home", "A", "Chữ 'h' trong hour là âm câm, còn lại được phát âm /h/.", "A hour|B house|C help|D home"],
+    [4, "Task 3. Choose the best option", "mcq", "What do people do to celebrate Christmas They ______ a Christmas tree", "C", "Trang trí/dựng cây thông Noel dùng động từ 'put up' hoặc 'decorate'.", "A wear|B watch|C put up|D blow up"],
+    [4, "Task 3. Choose the best option", "mcq", "Why would you like to be a reporter Because Id like to ______", "B", "Phóng viên (reporter) thì công việc là báo cáo tin tức (report the news).", "A grow flowers|B report the news|C teach children|D write stories"],
+    [4, "Task 3. Choose the best option", "mcq", "When is Childrens day Its on ______", "D", "Ngày Quốc tế Thiếu nhi: June 1st (June first).", "A June one|B June second|C June third|D June first"],
+    [4, "Task 3. Choose the best option", "mcq", "Did they go to Ba Na hills last weekend", "C", "Câu hỏi dạng Yes/No với Did -> Trả lời Yes, they did.", "A Yes they do|B Yes they are|C Yes they did|D Yes they were"],
+    [4, "Task 3. Choose the best option", "mcq", "______ he eat chicken last night", "D", "Có 'last night' -> Quá khứ đơn -> Dùng trợ động từ Did.", "A is|B Does|C Do|D Did"],
+    [4, "Task 3. Choose the best option", "mcq", "______ the matter with you", "C", "Mẫu câu hỏi thăm sức khỏe: What's the matter with you?", "A What|B whats|C Whats|D Whatre"],
+    [4, "Task 3. Choose the best option", "mcq", "I ______ a headache", "A", "Nói về bệnh tật: I have + a/an + tên bệnh.", "A have|B has|C had|D am"],
+    [4, "Task 3. Choose the best option", "mcq", "Whats the weather like ______ summer", "C", "Đứng trước danh từ chỉ mùa (summer) dùng giới từ 'in'.", "A on|B is|C in|D to"],
+    [4, "Task 3. Choose the best option", "mcq", "Its ______ hot and sunny in summer", "D", "Cần trạng từ tần suất để bổ nghĩa (usually: thường xuyên).", "A in|B on|C to|D usually"],
+    [4, "Task 3. Choose the best option", "mcq", "What food will you ______ at the party", "A", "Sau 'will' dùng động từ nguyên thể (have).", "A have|B having|C to have|D had"],
+    [4, "Task 4. Reorder", "reorder", "you/ walk/ beach/ Did/ on/ last/ the/ Sunday", "Did you walk on the beach last Sunday", "Câu hỏi Yes/No quá khứ: Did + S + V + Nơi chốn + Thời gian?", ""],
+    [4, "Task 4. Reorder", "reorder", "didnt/ He/ river/ go/ the/ to/ went/ He/ beach/ to/ the", "He didnt go to the river He went to the beach", "Câu phủ định quá khứ dùng didnt + V nguyên thể.", ""],
+    [4, "Task 4. Reorder", "reorder", "he/ have/ Did/ a/ in/ barbecue/ garden/ the/ yesterday", "Did he have a barbecue in the garden yesterday", "Tổ chức tiệc nướng: have a barbecue.", ""],
+    [4, "Task 4. Reorder", "reorder", "you/ decorate/ Will/ for/ the/ Tet/ house", "Will you decorate the house for Tet", "Câu hỏi tương lai đơn: Will + S + V + O?", ""],
+    [4, "Task 4. Reorder", "reorder", "going/ to/ a/ festival/ Im/ flower/ Tet/ at", "Im going to a flower festival at Tet", "Tương lai gần/dự định: I'm going to + địa điểm.", ""],
+    [4, "Task 4. Reorder", "reorder", "eats/ food/ healthy/ She/ to/ healthy/ stay", "She eats healthy food to stay healthy", "Chỉ mục đích dùng 'to + V' (to stay healthy).", ""],
+    [4, "Task 4. Reorder", "reorder", "brother/ once/ My/ basketball/ a/ plays/ week", "My brother plays basketball once a week", "Trạng từ tần suất cụ thể (once a week) đứng cuối câu.", ""],
+    [4, "Task 4. Reorder", "reorder", "is/ What/ you/ matter/ the/ with/ have/ I/ headache/ a", "What is the matter with you I have a headache", "Mẫu câu giao tiếp cơ bản đi khám bệnh.", ""],
 
     // ================== BÀI TẬP SỐ 5 ==================
-    [5, "Task 1. Odd one out.", "mcq", "A. lemon B. lime C. tea D. orange", "C", "Tea (trà) là đồ uống chế biến, còn lại là tên các loại quả họ cam chanh.", "A. lemon|B. lime|C. tea|D. orange"],
-    [5, "Task 1. Odd one out.", "mcq", "A. juice B. orange C. orange juice D. lemonade", "B", "Orange là trái cây nguyên quả/màu sắc, còn lại là các loại nước ép dạng lỏng.", "A. juice|B. orange|C. orange juice|D. lemonade"],
-    [5, "Task 1. Odd one out.", "mcq", "A. will B. make C. bring D. do", "A", "Will là trợ động từ (tương lai), còn lại là động từ thường hành động.", "A. will|B. make|C. bring|D. do"],
-    [5, "Task 1. Odd one out.", "mcq", "A. milk B. curry C. juice D. lemonade", "B", "Curry (cà ri) là thức ăn, còn lại là thức uống.", "A. milk|B. curry|C. juice|D. lemonade"],
-    [5, "Task 1. Odd one out.", "mcq", "A. tour guide B. designer C. hairdresser D. work", "D", "Work là động từ/danh từ chung, còn lại là danh từ chỉ nghề nghiệp.", "A. tour guide|B. designer|C. hairdresser|D. work"],
-    [5, "Task 1. Odd one out.", "mcq", "A. office B. bank C. businessman D. store", "C", "Businessman là người (doanh nhân), còn lại là địa điểm/nơi làm việc.", "A. office|B. bank|C. businessman|D. store"],
-    [5, "Task 2. Pronunciation.", "mcq", "A. listen B. time C. living D. city", "B", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/.", "A. listen|B. time|C. living|D. city"],
-    [5, "Task 2. Pronunciation.", "mcq", "A. home B. mother C. brother D. brush", "A", "Chữ 'o' trong home đọc là /əʊ/, còn lại (và chữ 'u') đọc là /ʌ/.", "A. home|B. mother|C. brother|D. brush"],
-    [5, "Task 2. Pronunciation.", "mcq", "A. country B. one C. come D. open", "D", "Chữ 'o' trong open đọc là /əʊ/, còn lại đọc là /ʌ/.", "A. country|B. one|C. come|D. open"],
-    [5, "Task 2. Pronunciation.", "mcq", "A. small B. floor C. door D. what", "D", "Chữ 'a' trong what đọc là /ɒ/, còn lại âm là /ɔ:/.", "A. small|B. floor|C. door|D. what"],
-    [5, "Task 2. Pronunciation.", "mcq", "A. game B. table C. small D. play", "C", "Chữ 'a' trong small đọc là /ɔ:/, còn lại đọc là /eɪ/.", "A. game|B. table|C. small|D. play"],
-    [5, "Task 3. Choose the best option.", "mcq", "He likes cooking. He'd like to be a/an ______.", "B", "Thích nấu ăn thì muốn trở thành đầu bếp (chef).", "A. actor|B. chef|C. hairdresser|D. pilot"],
-    [5, "Task 3. Choose the best option.", "mcq", "She doesn’t like Maths. ______ it’s difficult.", "C", "Giải thích lý do không thích -> Dùng 'Because' (bởi vì).", "A. but|B. and|C. because|D. or"],
-    [5, "Task 3. Choose the best option.", "mcq", "______ book is on the table.", "B", "Cần Tính từ sở hữu chỉ sự sở hữu của Lan (Lan's).", "A. Lan|B. Lan’s|C. he|D. she"],
-    [5, "Task 3. Choose the best option.", "mcq", "What is your ______? It’s 15 Nguyen Du street.", "A", "Có số nhà + tên đường -> Đây là hỏi địa chỉ (address).", "A. address|B. flat|C. city|D. town"],
-    [5, "Task 3. Choose the best option.", "mcq", "______ lessons does she have today?", "B", "Lessons đếm được số nhiều -> Hỏi số lượng dùng How many.", "A. How much|B. How many|C. How often|D. How"],
-    [5, "Task 3. Choose the best option.", "mcq", "Could you ______ me the way to the computer room?", "C", "Chỉ đường dùng cụm từ 'tell somebody the way'.", "A. say|B. paint|C. tell|D. sing"],
-    [5, "Task 3. Choose the best option.", "mcq", "We ______ the old buildings last week.", "B", "Có 'last week' (quá khứ đơn) -> Động từ thêm -ed (visited).", "A. visit|B. visited|C. to visit|D. visiting"],
-    [5, "Task 3. Choose the best option.", "mcq", "There will be ______ showers, so I'm going to bring the raincoat.", "C", "Showers đếm được số nhiều, câu khẳng định -> Dùng 'some'.", "A. a|B. an|C. some|D. many"],
-    [5, "Task 3. Choose the best option.", "mcq", "I think, many people will ______ astronauts in the future.", "C", "Sau 'will' dùng động từ to be ở dạng nguyên thể (be).", "A. are|B. is|C. be|D. am"],
-    [5, "Task 3. Choose the best option.", "mcq", "My father ______ in Ha Noi last week.", "B", "S số ít (My father), thì quá khứ (last week) -> to be là 'was'.", "A. were|B. was|C. is|D. are"],
-    // Reorder
-    [5, "Task 4. Put the words in correct order.", "reorder", "thirsty/ I/ feel/ want/ I/ to/ drink/ water/ some", "I feel thirsty I want to drink some water", "Cấu trúc want to V (muốn làm gì đó).", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "always/ homework/ They/ their/ in/ evening/ the/ do", "They always do their homework in the evening", "Trạng từ tần suất (always) đứng trước động từ thường (do).", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "every/ day/ how/ bananas/ do/ many/ you/ eat", "How many bananas do you eat every day", "Hỏi số lượng đếm được: How many + N(s) + do/does + S + V?", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "too/ She/ much/ eat/ candy/ shouldn't", "She shouldn't eat too much candy", "Lời khuyên: shouldn't + V nguyên thể.", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "you/ Do/ your/ live/ with/ parents", "Do you live with your parents", "Cấu trúc live with sb (sống cùng ai).", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "you/ live/ that/ Do/ in/ flat/ I/ No/ don't", "Do you live in that flat No I don't", "Câu hỏi Yes/No hiện tại đơn với 'Do'.", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "is/ address/ what/ your/ 36/ It's/ Sun/ flower/ street", "What is your address It's 36 Sun flower street", "Hỏi địa chỉ bằng What is your address.", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "a/ I/ new/ have/ friend/ school/ at", "I have a new friend at school", "Vị trí tính từ: a + tính từ (new) + danh từ (friend).", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "nationality/ her/ is/ What/ is/ she/ Malaysian", "What is her nationality she is Malaysian", "Hỏi quốc tịch bằng What is... nationality?", ""],
-    [5, "Task 4. Put the words in correct order.", "reorder", "do/ do/ What/ the/ weekend/ you/ at", "What do you do at the weekend", "Cụm thời gian 'at the weekend' đứng cuối câu hỏi.", ""]
+    [5, "Task 1. Odd one out", "mcq", "A lemon B lime C tea D orange", "C", "Tea (trà) là đồ uống chế biến, còn lại là tên các loại quả họ cam chanh.", "A lemon|B lime|C tea|D orange"],
+    [5, "Task 1. Odd one out", "mcq", "A juice B orange C orange juice D lemonade", "B", "Orange là trái cây nguyên quả/màu sắc, còn lại là các loại nước ép dạng lỏng.", "A juice|B orange|C orange juice|D lemonade"],
+    [5, "Task 1. Odd one out", "mcq", "A will B make C bring D do", "A", "Will là trợ động từ (tương lai), còn lại là động từ thường hành động.", "A will|B make|C bring|D do"],
+    [5, "Task 1. Odd one out", "mcq", "A milk B curry C juice D lemonade", "B", "Curry (cà ri) là thức ăn, còn lại là thức uống.", "A milk|B curry|C juice|D lemonade"],
+    [5, "Task 1. Odd one out", "mcq", "A tour guide B designer C hairdresser D work", "D", "Work là động từ/danh từ chung, còn lại là danh từ chỉ nghề nghiệp.", "A tour guide|B designer|C hairdresser|D work"],
+    [5, "Task 1. Odd one out", "mcq", "A office B bank C businessman D store", "C", "Businessman là người (doanh nhân), còn lại là địa điểm/nơi làm việc.", "A office|B bank|C businessman|D store"],
+    [5, "Task 2. Pronunciation", "mcq", "A listen B time C living D city", "B", "Chữ 'i' trong time đọc là /aɪ/, còn lại đọc là /ɪ/.", "A listen|B time|C living|D city"],
+    [5, "Task 2. Pronunciation", "mcq", "A home B mother C brother D brush", "A", "Chữ 'o' trong home đọc là /əʊ/, còn lại (và chữ 'u') đọc là /ʌ/.", "A home|B mother|C brother|D brush"],
+    [5, "Task 2. Pronunciation", "mcq", "A country B one C come D open", "D", "Chữ 'o' trong open đọc là /əʊ/, còn lại đọc là /ʌ/.", "A country|B one|C come|D open"],
+    [5, "Task 2. Pronunciation", "mcq", "A small B floor C door D what", "D", "Chữ 'a' trong what đọc là /ɒ/, còn lại âm là /ɔ:/.", "A small|B floor|C door|D what"],
+    [5, "Task 2. Pronunciation", "mcq", "A game B table C small D play", "C", "Chữ 'a' trong small đọc là /ɔ:/, còn lại đọc là /eɪ/.", "A game|B table|C small|D play"],
+    [5, "Task 3. Choose the best option", "mcq", "He likes cooking He'd like to be a/an ______", "B", "Thích nấu ăn thì muốn trở thành đầu bếp (chef).", "A actor|B chef|C hairdresser|D pilot"],
+    [5, "Task 3. Choose the best option", "mcq", "She doesnt like Maths ______ its difficult", "C", "Giải thích lý do không thích -> Dùng 'Because' (bởi vì).", "A but|B and|C because|D or"],
+    [5, "Task 3. Choose the best option", "mcq", "______ book is on the table", "B", "Cần Tính từ sở hữu chỉ sự sở hữu của Lan (Lan's).", "A Lan|B Lans|C he|D she"],
+    [5, "Task 3. Choose the best option", "mcq", "What is your ______ Its 15 Nguyen Du street", "A", "Có số nhà + tên đường -> Đây là hỏi địa chỉ (address).", "A address|B flat|C city|D town"],
+    [5, "Task 3. Choose the best option", "mcq", "______ lessons does she have today", "B", "Lessons đếm được số nhiều -> Hỏi số lượng dùng How many.", "A How much|B How many|C How often|D How"],
+    [5, "Task 3. Choose the best option", "mcq", "Could you ______ me the way to the computer room", "C", "Chỉ đường dùng cụm từ 'tell somebody the way'.", "A say|B paint|C tell|D sing"],
+    [5, "Task 3. Choose the best option", "mcq", "We ______ the old buildings last week", "B", "Có 'last week' (quá khứ đơn) -> Động từ thêm -ed (visited).", "A visit|B visited|C to visit|D visiting"],
+    [5, "Task 3. Choose the best option", "mcq", "There will be ______ showers so Im going to bring the raincoat", "C", "Showers đếm được số nhiều, câu khẳng định -> Dùng 'some'.", "A a|B an|C some|D many"],
+    [5, "Task 3. Choose the best option", "mcq", "I think many people will ______ astronauts in the future", "C", "Sau 'will' dùng động từ to be ở dạng nguyên thể (be).", "A are|B is|C be|D am"],
+    [5, "Task 3. Choose the best option", "mcq", "My father ______ in Ha Noi last week", "B", "S số ít (My father), thì quá khứ (last week) -> to be là 'was'.", "A were|B was|C is|D are"],
+    [5, "Task 4. Reorder", "reorder", "thirsty/ I/ feel/ want/ I/ to/ drink/ water/ some", "I feel thirsty I want to drink some water", "Cấu trúc want to V (muốn làm gì đó).", ""],
+    [5, "Task 4. Reorder", "reorder", "always/ homework/ They/ their/ in/ evening/ the/ do", "They always do their homework in the evening", "Trạng từ tần suất (always) đứng trước động từ thường (do).", ""],
+    [5, "Task 4. Reorder", "reorder", "every/ day/ how/ bananas/ do/ many/ you/ eat", "How many bananas do you eat every day", "Hỏi số lượng đếm được: How many + N(s) + do/does + S + V?", ""],
+    [5, "Task 4. Reorder", "reorder", "too/ She/ much/ eat/ candy/ shouldn't", "She shouldn't eat too much candy", "Lời khuyên: shouldn't + V nguyên thể.", ""],
+    [5, "Task 4. Reorder", "reorder", "you/ Do/ your/ live/ with/ parents", "Do you live with your parents", "Cấu trúc live with sb (sống cùng ai).", ""],
+    [5, "Task 4. Reorder", "reorder", "you/ live/ that/ Do/ in/ flat/ I/ No/ don't", "Do you live in that flat No I don't", "Câu hỏi Yes/No hiện tại đơn với 'Do'.", ""],
+    [5, "Task 4. Reorder", "reorder", "is/ address/ what/ your/ 36/ Its/ Sun/ flower/ street", "What is your address Its 36 Sun flower street", "Hỏi địa chỉ bằng What is your address.", ""],
+    [5, "Task 4. Reorder", "reorder", "a/ I/ new/ have/ friend/ school/ at", "I have a new friend at school", "Vị trí tính từ: a + tính từ (new) + danh từ (friend).", ""],
+    [5, "Task 4. Reorder", "reorder", "nationality/ her/ is/ What/ is/ she/ Malaysian", "What is her nationality she is Malaysian", "Hỏi quốc tịch bằng What is... nationality?", ""],
+    [5, "Task 4. Reorder", "reorder", "do/ do/ What/ the/ weekend/ you/ at", "What do you do at the weekend", "Cụm thời gian 'at the weekend' đứng cuối câu hỏi.", ""]
+];
+
+const rawData6to10 = [
+    // ================== BÀI TẬP SỐ 6 ==================
+    [6, "Task 1. Odd one out", "mcq", "A first B floor C second D third", "B", "Floor (tầng) là danh từ, các từ còn lại là số thứ tự.", "A first|B floor|C second|D third"],
+    [6, "Task 1. Odd one out", "mcq", "A useful B interesting C good D think", "D", "Think là động từ, các từ còn lại là tính từ.", "A useful|B interesting|C good|D think"],
+    [6, "Task 1. Odd one out", "mcq", "A hill B pagoda C lake D watch", "D", "Watch là động từ (xem) / danh từ (đồng hồ), các từ còn lại chỉ địa danh thiên nhiên/công trình.", "A hill|B pagoda|C lake|D watch"],
+    [6, "Task 1. Odd one out", "mcq", "A look B old C young D handsome", "A", "Look là động từ, các từ còn lại là tính từ miêu tả ngoại hình.", "A look|B old|C young|D handsome"],
+    [6, "Task 1. Odd one out", "mcq", "A yesterday B tomorrow C last night D last week", "B", "Tomorrow là trạng từ chỉ tương lai, còn lại chỉ quá khứ.", "A yesterday|B tomorrow|C last night|D last week"],
+    [6, "Task 1. Odd one out", "mcq", "A crow B grasshopper C snow white D ant", "C", "Snow white là tên nhân vật người, còn lại là tên các loài vật/côn trùng.", "A crow|B grasshopper|C snow white|D ant"],
+    [6, "Task 2. Pronunciation", "mcq", "A my B dirty C family D library", "A", "Chữ 'y' trong my đọc là /aɪ/, còn lại đọc là /i/.", "A my|B dirty|C family|D library"],
+    [6, "Task 2. Pronunciation", "mcq", "A city B island C motorbike D ice", "A", "Chữ 'i' trong city đọc là /ɪ/, còn lại đọc là /aɪ/.", "A city|B island|C motorbike|D ice"],
+    [6, "Task 2. Pronunciation", "mcq", "A then B father C thin D these", "C", "Chữ 'th' trong thin đọc là /θ/ (vô thanh), còn lại là /ð/ (hữu thanh).", "A then|B father|C thin|D these"],
+    [6, "Task 2. Pronunciation", "mcq", "A modern B holiday C pagoda D foggy", "C", "Chữ 'o' trong pagoda đọc là /əʊ/, còn lại đọc là /ɒ/.", "A modern|B holiday|C pagoda|D foggy"],
+    [6, "Task 2. Pronunciation", "mcq", "A breakfast B speak C head D healthy", "B", "Chữ 'ea' trong speak đọc là /i:/, còn lại đọc là /e/.", "A breakfast|B speak|C head|D healthy"],
+    [6, "Task 3. Choose the best option", "mcq", "These shoes are ______ than those ones", "B", "So sánh hơn với tính từ ngắn (cheap) thêm đuôi -er.", "A cheap|B cheaper|C more cheap|D cheapest"],
+    [6, "Task 3. Choose the best option", "mcq", "I write ______ my parents every month", "C", "Cấu trúc: write to somebody (viết thư cho ai).", "A for|B from|C to|D in"],
+    [6, "Task 3. Choose the best option", "mcq", "They ______ at Hoas birthday party yesterday", "D", "Quá khứ đơn (yesterday), S là 'They' -> to be là 'were'.", "A am|B is|C are|D Were"],
+    [6, "Task 3. Choose the best option", "mcq", "They are from ______", "A", "Sau 'from' cần một danh từ chỉ Quốc gia (Singapore).", "A Singapore|B Vietnamese|C English|D American"],
+    [6, "Task 3. Choose the best option", "mcq", "This is a photo ______ her family", "D", "Bức ảnh của gia đình ai đó: a photo of...", "A from|B at|C in|D of"],
+    [6, "Task 3. Choose the best option", "mcq", "My father drives a bus He is a bus ______", "B", "Người lái xe buýt gọi là: bus driver.", "A teacher|B driver|C doctor|D farmer"],
+    [6, "Task 3. Choose the best option", "mcq", "What ______ your uncle do", "D", "Hỏi nghề nghiệp, chủ ngữ số ít (your uncle) -> dùng trợ ĐT 'does'.", "A is|B am|C do|D does"],
+    [6, "Task 3. Choose the best option", "mcq", "My ______ drink is milk", "B", "Đồ uống yêu thích: favourite drink.", "A like|B favourite|C love|D dink"],
+    [6, "Task 3. Choose the best option", "mcq", "School starts at 8 am and ______ at 430pm", "C", "Trường học bắt đầu lúc 8h và kết thúc (finishes) lúc 4h30.", "A works|B teaches|C finishes|D watches"],
+    [6, "Task 3. Choose the best option", "mcq", "I like Music ______ it is fun", "A", "Giải thích lý do thích môn Âm nhạc -> dùng because (bởi vì).", "A because|B but|C so|D and"],
+    [6, "Task 4. Reorder", "reorder", "are/ modern/ There/ towers/ my/ in/ town", "There are modern towers in my town", "Cấu trúc There are + N số nhiều + chỉ nơi chốn.", ""],
+    [6, "Task 4. Reorder", "reorder", "usually/ gets/ dressed/ she/ combs/ hair/ her/ and/ school/ to/ goes", "She usually gets dressed combs her hair and goes to school", "Liệt kê chuỗi hành động hằng ngày của một người.", ""],
+    [6, "Task 4. Reorder", "reorder", "How/ you/ get/ did/ Tuan/ Chau/ island/ to/ your/ last/ holiday", "How did you get to Tuan Chau island your last holiday", "Hỏi phương tiện đi lại trong quá khứ.", ""],
+    [6, "Task 4. Reorder", "reorder", "weekend/ grandparents/ I/ last/ my/ visited", "I visited my grandparents last weekend", "S + V-ed + O + Thời gian quá khứ.", ""],
+    [6, "Task 4. Reorder", "reorder", "she/ TV/ Did/ cartoons/ on/ watch/ night/ last", "Did she watch cartoons on TV last night", "Câu hỏi Yes/No quá khứ đơn.", ""],
+    [6, "Task 4. Reorder", "reorder", "learns/ He/ new/ often/ words/ class/ in/ English", "He often learns new words in English class", "Trạng từ tần suất đứng trước động từ thường.", ""],
+    [6, "Task 4. Reorder", "reorder", "does/ What/ your/ time/ history/ start/ class", "What time does your history class start", "Câu hỏi về thời gian bắt đầu lớp học.", ""],
+    [6, "Task 4. Reorder", "reorder", "is/ New/ on/ year/ first/ January/ the/ of", "New year is on the first of January", "Đã fix: Ngày đầu năm mới là mùng 1 tháng 1.", ""],
+    [6, "Task 4. Reorder", "reorder", "ate/ at/ They/ delicious/ the/ food/ restaurant", "They ate delicious food at the restaurant", "S + V + O + Trạng ngữ nơi chốn.", ""],
+    [6, "Task 4. Reorder", "reorder", "coffee/ was/ I/ a/ at/ shop/ delicious/ The/ were/ drinks", "I was at a coffee shop The drinks were delicious", "Ghép 2 câu đơn giản miêu tả.", ""],
+
+    // ================== BÀI TẬP SỐ 7 ==================
+    [7, "Task 1. Odd one out", "mcq", "A animal B rhino C giraffe D python", "A", "Animal là từ chung (động vật), còn lại là tên loài vật cụ thể.", "A animal|B rhino|C giraffe|D python"],
+    [7, "Task 1. Odd one out", "mcq", "A teachers day B sports day C today D childrens day", "C", "Today (hôm nay), còn lại là các ngày lễ kỷ niệm.", "A teachers day|B sports day|C today|D childrens day"],
+    [7, "Task 1. Odd one out", "mcq", "A went B sang C had D watched", "D", "Watched là động từ quá khứ có quy tắc, còn lại là bất quy tắc.", "A went|B sang|C had|D watched"],
+    [7, "Task 1. Odd one out", "mcq", "A train B underground C provice D coach", "C", "Province là tỉnh thành, còn lại là các loại phương tiện giao thông.", "A train|B underground|C provice|D coach"],
+    [7, "Task 1. Odd one out", "mcq", "A wash B always C often D usually", "A", "Wash là động từ, còn lại là trạng từ tần suất.", "A wash|B always|C often|D usually"],
+    [7, "Task 2. Pronunciation", "mcq", "A busy B early C by D country", "C", "Chữ 'y' trong by đọc là /aɪ/, còn lại đọc là /i/.", "A busy|B early|C by|D country"],
+    [7, "Task 2. Pronunciation", "mcq", "A fun B cut C bus D beautiful", "D", "Chữ 'u' trong beautiful đọc là /ju:/, còn lại đọc là /ʌ/.", "A fun|B cut|C bus|D beautiful"],
+    [7, "Task 2. Pronunciation", "mcq", "A invite B comic C picnic D visit", "A", "Chữ 'i' trong invite đọc là /aɪ/, còn lại đọc là /ɪ/.", "A invite|B comic|C picnic|D visit"],
+    [7, "Task 2. Pronunciation", "mcq", "A car B carry C come D city", "D", "Chữ 'c' trong city đọc là /s/, còn lại đọc là /k/.", "A car|B carry|C come|D city"],
+    [7, "Task 2. Pronunciation", "mcq", "A this B thick C thank D thin", "A", "Chữ 'th' trong this đọc là /ð/ (hữu thanh), còn lại đọc là /θ/ (vô thanh).", "A this|B thick|C thank|D thin"],
+    [7, "Task 3. Choose the best option", "mcq", "Music English Math are ______ at school", "C", "Âm nhạc, Toán, Anh là các môn học (subjects).", "A favourites|B games|C subjects|D festivals"],
+    [7, "Task 3. Choose the best option", "mcq", "Look It ______ again", "D", "Có từ 'Look!' -> Hành động đang diễn ra -> Hiện tại tiếp diễn.", "A rains|B raining|C to rain|D is raining"],
+    [7, "Task 3. Choose the best option", "mcq", "We saw ______ girls there", "B", "Trước danh từ (girls) cần Tính từ (beautiful).", "A beauty|B beautiful|C beautifully|D Beautify"],
+    [7, "Task 3. Choose the best option", "mcq", "What ______ you do in your free time", "C", "Hỏi thói quen hiện tại, S là 'you' -> Trợ ĐT là do.", "A does|B did|C do|D can"],
+    [7, "Task 3. Choose the best option", "mcq", "______ did you go last week I went to the zoo", "D", "Câu trả lời là địa điểm (the zoo) -> Hỏi bằng Where.", "A who|B what|C when|D where"],
+    [7, "Task 3. Choose the best option", "mcq", "How ______ is it from here to Hanoi", "B", "Hỏi khoảng cách địa lý dùng How far.", "A often|B far|C many|D much"],
+    [7, "Task 3. Choose the best option", "mcq", "It often ______ in the rainy season", "C", "Chủ ngữ It + often -> Động từ thêm 's' (rains).", "A cold|B warm|C rains|D sunny"],
+    [7, "Task 3. Choose the best option", "mcq", "Which places ______ you visit when you were in Ha Long", "B", "Có vế 'were in Ha Long' -> Câu hỏi quá khứ dùng trợ ĐT 'did'.", "A do|B did|C will|D is"],
+    [7, "Task 3. Choose the best option", "mcq", "She ______ to the radio in the morning", "A", "Nghe đài (listen to). Chủ ngữ She -> thêm 's' (listens).", "A listens|B watches|C listen|D sees"],
+    [7, "Task 3. Choose the best option", "mcq", "He kicks the ball ______", "C", "Bổ nghĩa cho động từ 'kick' cần trạng từ. Trạng từ của hard vẫn là hard.", "A good|B goodly|C hard|D hardly"],
+    [7, "Task 4. Reorder", "reorder", "do/ father/ what/ free/ in/ his/ does/ your/ time", "What does your father do in his free time", "Cấu trúc hỏi sở thích lúc rảnh rỗi.", ""],
+    [7, "Task 4. Reorder", "reorder", "going/ I/ am/ food/ cook/ to/ some", "I am going to cook some food", "Thì tương lai gần (be going to + V).", ""],
+    [7, "Task 4. Reorder", "reorder", "birthday/ I/ went/ to/ my/ friends/ party/ yesterday", "I went to my friends birthday party yesterday", "Quá khứ đơn.", ""],
+    [7, "Task 4. Reorder", "reorder", "like/ is/ what/ hometown/ your", "What is your hometown like", "Hỏi quê hương bạn trông như thế nào.", ""],
+    [7, "Task 4. Reorder", "reorder", "with/ like/ you/ would/ work/ who/ to", "Who would you like to work with", "Bạn muốn làm việc cùng với ai.", ""],
+    [7, "Task 4. Reorder", "reorder", "study/ I/ a/ twice/ with/ week/ partner/ a", "I study with a partner twice a week", "Học cùng bạn 2 lần 1 tuần.", ""],
+    [7, "Task 4. Reorder", "reorder", "in/ I/ dinner/ the/ cook/ often/ afternoon", "I often cook dinner in the afternoon", "Trạng từ tần suất đứng trước ĐT thường.", ""],
+    [7, "Task 4. Reorder", "reorder", "often/ PE/ does/ How/ have/ Quan", "How often does Quan have PE", "Hỏi tần suất học môn Thể dục.", ""],
+    [7, "Task 4. Reorder", "reorder", "his/ crowded/ parents/ He/ in/ with/ lives/ a/ town", "He lives in a crowded town with his parents", "Sống ở thị trấn đông đúc cùng bố mẹ.", ""],
+    [7, "Task 4. Reorder", "reorder", "you/ Why/ stay/ will/ at/ tomorrow/ home", "Why will you stay at home tomorrow", "Câu hỏi tương lai đơn hỏi lý do.", ""],
+
+    // ================== BÀI TẬP SỐ 8 ==================
+    [8, "Task 1. Odd one out", "mcq", "A Where B How C What D were", "D", "Were là động từ to be quá khứ, còn lại là Từ để hỏi.", "A Where|B How|C What|D were"],
+    [8, "Task 1. Odd one out", "mcq", "A yucky B well C good D noisy", "B", "Well là trạng từ, còn lại là tính từ.", "A yucky|B well|C good|D noisy"],
+    [8, "Task 1. Odd one out", "mcq", "A slowly B quiet C scary D busy", "A", "Slowly là trạng từ thể cách, còn lại là tính từ.", "A slowly|B quiet|C scary|D busy"],
+    [8, "Task 1. Odd one out", "mcq", "A movie B library C noisy D coffee", "C", "Noisy là tính từ, còn lại là danh từ.", "A movie|B library|C noisy|D coffee"],
+    [8, "Task 1. Odd one out", "mcq", "A weekend B Monday C Tuesday D Wednesday", "A", "Weekend là cuối tuần, còn lại là các ngày cụ thể trong tuần.", "A weekend|B Monday|C Tuesday|D Wednesday"],
+    [8, "Task 1. Odd one out", "mcq", "A last night B yesterday C last friday D today", "D", "Today chỉ hiện tại, các từ còn lại chỉ quá khứ.", "A last night|B yesterday|C last friday|D today"],
+    [8, "Task 2. Pronunciation", "mcq", "A project B slowly C story D motorbike", "A", "Chữ 'o' trong project đọc là /ɒ/, còn lại đọc là /əʊ/.", "A project|B slowly|C story|D motorbike"],
+    [8, "Task 2. Pronunciation", "mcq", "A history B house C hour D home", "C", "Chữ 'h' trong hour là âm câm, còn lại được phát âm.", "A history|B house|C hour|D home"],
+    [8, "Task 2. Pronunciation", "mcq", "A breakfast B seaside C beach D teach", "A", "Chữ 'ea' trong breakfast đọc là /e/, còn lại đọc là /i:/.", "A breakfast|B seaside|C beach|D teach"],
+    [8, "Task 2. Pronunciation", "mcq", "A crowded B wanted C needed D worked", "D", "Đuôi -ed trong worked đọc là /t/, còn lại đọc là /ɪd/.", "A crowded|B wanted|C needed|D worked"],
+    [8, "Task 2. Pronunciation", "mcq", "A clever B see C get D festival", "B", "Chữ 'e' trong see đọc là /i:/, còn lại đọc là /e/.", "A clever|B see|C get|D festival"],
+    [8, "Task 3. Choose the best option", "mcq", "I live in flat 18 ______ the second floor of Ha Noi Tower", "B", "Sống trên tầng mấy dùng giới từ 'on'.", "A in|B on|C at|D of"],
+    [8, "Task 3. Choose the best option", "mcq", "______ students are there in the classroom – There are thirty four", "B", "Hỏi số lượng học sinh (đếm được) -> dùng How many.", "A How often|B How many|C How much|D When"],
+    [8, "Task 3. Choose the best option", "mcq", "Phong is going ______ football on Sports Day", "A", "Thì tương lai gần: be going + to V (to play).", "A to play|B playing|C played|D plays"],
+    [8, "Task 3. Choose the best option", "mcq", "______ does he learn English  – Because he wants to watch English cartoons on TV", "C", "Trả lời 'Because' -> Hỏi lý do (Why).", "A What|B where|C Why|D How"],
+    [8, "Task 3. Choose the best option", "mcq", "Linda has a pain in her tooth She has a ______", "C", "Đau răng -> toothache.", "A fever|B stomach ache|C toothache|D earache"],
+    [8, "Task 3. Choose the best option", "mcq", "He often travels ______ car ______ my father", "B", "Đi bằng xe (by car) cùng với ai đó (with my father).", "A by/ for|B by/ with|C with/ by|D for/ by"],
+    [8, "Task 3. Choose the best option", "mcq", "Would you like to do arts and crafts", "A", "Đáp lại lời mời 'Would you like' -> Yes, please.", "A Yes please|B Yes I do|C Yes I am|D Yes I was"],
+    [8, "Task 3. Choose the best option", "mcq", "Could you tell me the way to the ______", "B", "Chỉ đường đến một địa điểm -> computer room.", "A floor|B computer room|C wall|D chair"],
+    [8, "Task 3. Choose the best option", "mcq", "Id like to be ______ engineer", "C", "Kỹ sư bắt đầu bằng nguyên âm 'e' -> dùng mạo từ 'an'.", "A a|B some|C an|D one"],
+    [8, "Task 3. Choose the best option", "mcq", "He has high temperature He has a ______", "B", "Nhiệt độ cao (sốt) -> fever.", "A toothache|B fever|C earache|D backache"],
+    [8, "Task 4. Reorder", "reorder", "at/ Tony/ the/ was/ stadium/ Sunday/ last/ It/ noisy/ was", "Tony was at the stadium last Sunday It was noisy", "Cấu trúc to be quá khứ đơn.", ""],
+    [8, "Task 4. Reorder", "reorder", "board/ We/ played/ games/ some/ last/ Thursday", "We played some board games last Thursday", "S + V-ed + O + Thời gian quá khứ.", ""],
+    [8, "Task 4. Reorder", "reorder", "baked/ My/ cupcakes/ for/ mother/ my/ birthday/ night/ last", "My mother baked cupcakes for my birthday last night", "S + V-ed + O + for N + time.", ""],
+    [8, "Task 4. Reorder", "reorder", "had/ He/ at/ a/ his/ friends/ sleepover/ house", "He had a sleepover at his friends house", "Tổ chức tiệc ngủ ở nhà bạn.", ""],
+    [8, "Task 4. Reorder", "reorder", "didnt/ to/ Tom/ go/ last/ month/ the/ river", "Tom didnt go to the river last month", "Câu phủ định quá khứ.", ""],
+    [8, "Task 4. Reorder", "reorder", "he/ have/ Did/ a/ in/ barbecue/ garden/ the/ yesterday", "Did he have a barbecue in the garden yesterday", "Tổ chức tiệc nướng.", ""],
+    [8, "Task 4. Reorder", "reorder", "didnt/ He/ river/ go/ the/ to/ went/ He/ beach/ to/ the", "He didnt go to the river He went to the beach", "Câu kể về 2 sự kiện trái ngược.", ""],
+    [8, "Task 4. Reorder", "reorder", "this/ building/ He/ lives/ in/ parents/ with/ his", "He lives in this building with his parents", "Sống trong tòa nhà này cùng bố mẹ.", ""],
+    [8, "Task 4. Reorder", "reorder", "likes/ He/ helping/ classmates/ his", "He likes helping his classmates", "Like + V-ing.", ""],
+    [8, "Task 4. Reorder", "reorder", "address/ My/ is/ Rose/ street/ 85", "My address is 85 Rose street", "Địa chỉ của tôi là số 85 đường Rose.", ""],
+
+    // ================== BÀI TẬP SỐ 9 ==================
+    [9, "Task 1. Odd one out", "mcq", "A toothache B headache C chickenpox D wrong", "D", "Wrong là tính từ (sai), các từ còn lại là danh từ chỉ bệnh tật.", "A toothache|B headache|C chickenpox|D wrong"],
+    [9, "Task 1. Odd one out", "mcq", "A have B see C flu D paint", "C", "Flu (cúm) là bệnh/danh từ, còn lại là động từ.", "A have|B see|C flu|D paint"],
+    [9, "Task 1. Odd one out", "mcq", "A ear B ache C head D tooth", "B", "Ache là sự đau đớn, còn lại là các bộ phận cơ thể.", "A ear|B ache|C head|D tooth"],
+    [9, "Task 1. Odd one out", "mcq", "A give B paper C balloon D present", "A", "Give là động từ, còn lại là danh từ đồ vật.", "A give|B paper|C balloon|D present"],
+    [9, "Task 1. Odd one out", "mcq", "A noisy B stomachache C quiet D busy", "B", "Stomachache là danh từ bệnh, còn lại là tính từ.", "A noisy|B stomachache|C quiet|D busy"],
+    [9, "Task 2. Pronunciation", "mcq", "A home B know C sport D go", "C", "Chữ 'o' trong sport đọc là /ɔ:/, còn lại là /əʊ/.", "A home|B know|C sport|D go"],
+    [9, "Task 2. Pronunciation", "mcq", "A beach B sea C great D read", "C", "Chữ 'ea' trong great đọc là /eɪ/, còn lại đọc là /i:/.", "A beach|B sea|C great|D read"],
+    [9, "Task 2. Pronunciation", "mcq", "A study B fun C busy D Sunday", "C", "Chữ 'u' trong busy đọc là /ɪ/, còn lại đọc là /ʌ/.", "A study|B fun|C busy|D Sunday"],
+    [9, "Task 2. Pronunciation", "mcq", "A pretty B centre C went D else", "A", "Chữ 'e' trong pretty đọc là /ɪ/, còn lại đọc là /e/.", "A pretty|B centre|C went|D else"],
+    [9, "Task 2. Pronunciation", "mcq", "A twice B birthday C seaside D quiet", "B", "Chữ 'i' trong birthday đọc là /ɜ:/, còn lại là /aɪ/.", "A twice|B birthday|C seaside|D quiet"],
+    [9, "Task 3. Choose the best option", "mcq", "Nga lives ______ 52 Nguyen Dinh Chieu Street", "A", "Địa chỉ có số nhà cụ thể -> dùng giới từ 'at'.", "A at|B on|C in|D with"],
+    [9, "Task 3. Choose the best option", "mcq", "Will you be free tomorrow evening  - ______", "A", "Hỏi Will you -> Trả lời Yes, I will.", "A Yes I will|B Yes I do|C Yes I am|D Yes I wont"],
+    [9, "Task 3. Choose the best option", "mcq", "______ you go to Mais party last Sunday", "A", "Quá khứ đơn (last Sunday) -> Dùng trợ động từ Did.", "A Did|B Are|C Were|D Does"],
+    [9, "Task 3. Choose the best option", "mcq", "We had a lot of ______ at the party", "B", "Cụm từ: have a lot of fun (rất vui vẻ).", "A funny|B fun|C nice|D great"],
+    [9, "Task 3. Choose the best option", "mcq", "I want ______ with my foreign friends Tony", "D", "Want + to V (muốn làm gì).", "A to talking|B talking|C talk|D to talk"],
+    [9, "Task 3. Choose the best option", "mcq", "Tony and Linda ______ stomachache this morning", "C", "Hai người (số nhiều) -> dùng động từ 'have'.", "A do|B does|C have|D has"],
+    [9, "Task 3. Choose the best option", "mcq", "Jack has a stomachache He ______ eat too much food", "D", "Khuyên không nên làm gì: shouldn't + V.", "A has|B have|C should|D shouldn't"],
+    [9, "Task 3. Choose the best option", "mcq", "Tony has a toothache He should ______", "D", "Đau răng thì nên đi gặp nha sĩ (see a dentist).", "A eat too much|B see a doctor|C play outside|D see a dentist"],
+    [9, "Task 3. Choose the best option", "mcq", "We learn English ______ we want to read comic books", "A", "Nêu lý do -> dùng because.", "A because|B so|C and|D why"],
+    [9, "Task 3. Choose the best option", "mcq", "What is Tam ______  She is hardworking and kind", "B", "Hỏi tính cách: What is + người + like?", "A doing|B like|C watching|D do"],
+    [9, "Task 4. Reorder", "reorder", "your/ What/ in/ family/ did/ do/ Nha/ Trang", "What did your family do in Nha Trang", "Gia đình bạn đã làm gì ở Nha Trang.", ""],
+    [9, "Task 4. Reorder", "reorder", "took/ trip/ We/ around/ boat/ a/ bay/ the", "We took a boat trip around the bay", "Có chuyến đi thuyền quanh vịnh.", ""],
+    [9, "Task 4. Reorder", "reorder", "seashells/ I/ with/ collected/ brother/ on/ my/ beach/ the", "I collected seashells with my brother on the beach", "Nhặt vỏ sò cùng anh trai trên biển.", ""],
+    [9, "Task 4. Reorder", "reorder", "saw/ Tony/ interesting/ some/ places/ Sydney/ in", "Tony saw some interesting places in Sydney", "Tony đã thấy vài nơi thú vị ở Sydney.", ""],
+    [9, "Task 4. Reorder", "reorder", "you/ decorate/ Will/ house/ the/ for/ tet", "Will you decorate the house for tet", "Hỏi dự định ngày Tết.", ""],
+    [9, "Task 4. Reorder", "reorder", "going/ we/ have/ are/ Mid-Autumn/ to/ party/ a/ on/ festival", "We are going to have a party on Mid-Autumn festival", "Dự định tổ chức tiệc Trung thu.", ""],
+    [9, "Task 4. Reorder", "reorder", "and/ food/ will/ What/ drinks/ you/ at/ have/ party/ the", "What food and drinks will you have at the party", "Bạn sẽ có đồ ăn thức uống gì ở bữa tiệc.", ""],
+    [9, "Task 4. Reorder", "reorder", "ate/ I/ too/ much/ pizza/ now/ have/ I/ stomachache/ a", "I ate too much pizza now I have a stomachache", "Ăn nhiều pizza nên giờ đau bụng.", ""],
+    [9, "Task 4. Reorder", "reorder", "English/ Mai/ learns/ by/ books/ reading/ free/ comic/ in/ her/ time", "Mai learns English by reading comic books in her free time", "Học tiếng Anh bằng cách đọc truyện tranh.", ""],
+    [9, "Task 4. Reorder", "reorder", "buy/ Will/ roses/ you/ Tet/ for", "Will you buy roses for Tet", "Bạn sẽ mua hoa hồng cho dịp Tết chứ.", ""],
+
+    // ================== BÀI TẬP SỐ 10 ==================
+    [10, "Task 1. Odd one out", "mcq", "A tortoise B crow C snow D cow", "C", "Snow (tuyết) không phải là động vật như các từ còn lại.", "A tortoise|B crow|C snow|D cow"],
+    [10, "Task 1. Odd one out", "mcq", "A well B slowly C beautifully D happy", "D", "Happy là Tính từ, còn lại là Trạng từ thể cách.", "A well|B slowly|C beautifully|D happy"],
+    [10, "Task 1. Odd one out", "mcq", "A city B mall C museum D stadium", "A", "City (thành phố), còn lại là các địa điểm công trình cụ thể.", "A city|B mall|C museum|D stadium"],
+    [10, "Task 1. Odd one out", "mcq", "A bad B feel C terrible D sick", "B", "Feel là Động từ, còn lại là Tính từ chỉ tình trạng/cảm giác.", "A bad|B feel|C terrible|D sick"],
+    [10, "Task 1. Odd one out", "mcq", "A Italy B Brazil C Spain D Vietnamese", "D", "Vietnamese là quốc tịch/ngôn ngữ, còn lại là tên các quốc gia.", "A Italy|B Brazil|C Spain|D Vietnamese"],
+    [10, "Task 2. Pronunciation", "mcq", "A clean B wear C beach D teach", "B", "Chữ 'ea' trong wear đọc là /eə/, còn lại đọc là /i:/.", "A clean|B wear|C beach|D teach"],
+    [10, "Task 2. Pronunciation", "mcq", "A floor B book C cook D food", "A", "Chữ 'oo' trong floor đọc là /ɔ:/, còn lại đọc là /ʊ/ hoặc /u:/.", "A floor|B book|C cook|D food"],
+    [10, "Task 2. Pronunciation", "mcq", "A Sunday B sunny C music D under", "C", "Chữ 'u' trong music đọc là /ju:/, còn lại đọc là /ʌ/.", "A Sunday|B sunny|C music|D under"],
+    [10, "Task 2. Pronunciation", "mcq", "A sky B party C July D fly", "B", "Chữ 'y' trong party đọc là /ɪ/, còn lại đọc là /aɪ/.", "A sky|B party|C July|D fly"],
+    [10, "Task 2. Pronunciation", "mcq", "A chair B chicken C teacher D school", "D", "Chữ 'ch' trong school đọc là /k/, còn lại đọc là /tʃ/.", "A chair|B chicken|C teacher|D school"],
+    [10, "Task 3. Choose the best option", "mcq", "How do you feel I feel ______", "B", "Cảm giác tồi tệ (terrible).", "A chickenpox|B terrible|C earache|D toothache"],
+    [10, "Task 3. Choose the best option", "mcq", "My grandma is tired She should ______ some rest", "A", "Sau should là Động từ nguyên thể (get).", "A get|B gets|C to get|D getting"],
+    [10, "Task 3. Choose the best option", "mcq", "Sue shouldn’t ______ because she has a toothache", "C", "Đau răng thì không nên ăn kẹo (eat candy).", "A eat snacks|B eat vegetable|C eat candy|D eat pasta"],
+    [10, "Task 3. Choose the best option", "mcq", "What do you need to make a cake", "A", "Làm bánh thì cần bột mì (flour). Flour không đếm được nên dùng some.", "A I need some flour|B I need a few flour|C I need a pizza|D I need some soup"],
+    [10, "Task 3. Choose the best option", "mcq", "What should you do to be healthy You should eat ______ vegetables", "C", "Ăn nhiều rau (a lot of vegetables).", "A a little|B some|C a lot of|D a few"],
+    [10, "Task 3. Choose the best option", "mcq", "______ are you going to visit this summer - Dam Sen Aquarium", "A", "Thăm công viên nước (địa điểm) -> dùng Where.", "A Where|B When|C Why|D Which"],
+    [10, "Task 3. Choose the best option", "mcq", "______ is it from Da Nang to Hue - Its about 100 kilometers", "C", "Hỏi khoảng cách -> dùng How far.", "A How often|B How many|C How far|D How much"],
+    [10, "Task 3. Choose the best option", "mcq", "______ are the main characters in the story They are Tam and Cam", "A", "Hỏi nhân vật (người) -> dùng Who.", "A Who|B Where|C What|D Which"],
+    [10, "Task 3. Choose the best option", "mcq", "How does she stay healthy She ______", "C", "Tập thể dục để giữ sức khỏe (does exercise).", "A eats candy|B do exercise|C does exercise|D eats pizza"],
+    [10, "Task 3. Choose the best option", "mcq", "Did you ______ some interesting places on your holiday", "A", "Sau trợ ĐT 'Did' -> Động từ nguyên thể (see).", "A see|B saw|C buy|D take"],
+    [10, "Task 4. Reorder", "reorder", "can/ I/ the/ play/ piano/ can’t/ I/ but/ sports/ play", "I can play the piano but I can’t play sports", "Mệnh đề đối lập nối bằng but.", ""],
+    [10, "Task 4. Reorder", "reorder", "my/ I/ favourite/ last/ night/ TV/ programme/ watched", "I watched my favourite TV programme last night", "S + V + O + Time.", ""],
+    [10, "Task 4. Reorder", "reorder", "get/ presents/ lot/ Children/ a/ Children’s/ on/ Day/ of", "Children get a lot of presents on Children’s Day", "Nhận được nhiều quà vào Quốc tế Thiếu nhi.", ""],
+    [10, "Task 4. Reorder", "reorder", "in/ front/ of/ flower/ a/ garden/ is/ There/ my/ house", "There is a flower garden in front of my house", "Có một vườn hoa trước nhà.", ""],
+    [10, "Task 4. Reorder", "reorder", "sometimes/ He/ helps/ mother/ his/ laundry/ do/ the", "He sometimes helps his mother do the laundry", "Giúp mẹ giặt đồ (help sb do sth).", ""],
+    [10, "Task 4. Reorder", "reorder", "his/ father/ playing/ basketball/ Nam/ are/ the/ and/ at/ gym/ now", "Nam and his father are playing basketball at the gym now", "Thì hiện tại tiếp diễn với S số nhiều.", ""],
+    [10, "Task 4. Reorder", "reorder", "you/ Were/ Tom/ at/ and/ movie/ the/ theater/ month/ last", "Were you and Tom at the movie theater last month", "Câu hỏi quá khứ với To be số nhiều.", ""],
+    [10, "Task 4. Reorder", "reorder", "food/ is/ chips/ favourite/ my/ eat/ I/ twice/ it/ week/ a", "My favourite food is chips I eat it twice a week", "Thích ăn khoai tây chiên 2 lần/tuần.", ""],
+    [10, "Task 4. Reorder", "reorder", "hair/ brother/ your/ have/ brown/ short/ curly/ Does", "Does your brother have short curly brown hair", "Trật tự tính từ: size + shape + color.", ""],
+    [10, "Task 4. Reorder", "reorder", "buy/ I/ flowers/ the/ peach/ at/ market/ the/ Tet/ before", "I buy peach flowers at the market before Tet", "Mua hoa đào ở chợ trước Tết.", ""]
 ];
 
 /* ================= TRẠNG THÁI ỨNG DỤNG LÕI ================= */
+let currentPackage = 1; // 1: Test 1-5, 2: Test 6-10
 let questionBank = [];
 let currentIndex = 0;
-let userProgress = {
-    total: rawData.length,
-    status: new Array(rawData.length).fill(false),
-    tries: new Array(rawData.length).fill(0),
-    mistakes: new Array(rawData.length).fill(null).map(() => [])
-};
+let userProgress = {};
 let reorderState = { pool: [], answer: [] };
+
+function selectPackage(pkg) {
+    currentPackage = pkg;
+    document.querySelectorAll('.pkg-btn').forEach(btn => btn.classList.remove('active'));
+    if (pkg === 1) document.getElementById('pkg-1-5').classList.add('active');
+    else document.getElementById('pkg-6-10').classList.add('active');
+}
 
 /* ================= KHỞI ĐỘNG ỨNG DỤNG ================= */
 function startApp() {
@@ -433,24 +615,31 @@ function startApp() {
         return;
     }
     
-    // Khởi tạo mảng Object chuẩn từ rawData
-    questionBank = rawData.map((d, index) => {
-        // Tự động loại bỏ MỌI DẤU CHẤM/PHẨY/HỎI CHẤM ra khỏi câu hỏi để làm sạch dữ liệu
-        let cleanText = d[3].replace(/[.,?!]/g, '');
-        let cleanCorrect = d[4].replace(/[.,?!]/g, '');
+    // Chọn kho dữ liệu dựa vào Package
+    let rawDataToUse = currentPackage === 1 ? rawData1to5 : rawData6to10;
+    
+    // Parse dữ liệu
+    questionBank = rawDataToUse.map((d, index) => {
         let cleanOptions = d[6] ? d[6].split('|') : [];
-
         return {
             id: index,
             sampleNum: d[0],
             taskTitle: d[1],
             qType: d[2],
-            qText: cleanText,
-            correctAns: cleanCorrect,
+            qText: d[3],
+            correctAns: d[4],
             explainText: d[5],
             options: cleanOptions
         }
     });
+
+    // Reset Progress
+    userProgress = {
+        total: questionBank.length,
+        status: new Array(questionBank.length).fill(false),
+        tries: new Array(questionBank.length).fill(0),
+        mistakes: new Array(questionBank.length).fill(null).map(() => [])
+    };
 
     document.getElementById('display-name').innerText = nameInput;
     document.getElementById('welcome-screen').classList.remove('active-screen');
@@ -476,10 +665,9 @@ function loadQuestion(index) {
     currentIndex = index;
     const q = questionBank[index];
     
-    document.getElementById('q-task').innerText = `ĐỀ ${q.sampleNum} - ${q.taskTitle}`;
+    document.getElementById('q-task').innerText = `TEST ${q.sampleNum} - ${q.taskTitle}`;
     
-    // Nếu là câu trắc nghiệm, vẫn in text bình thường. Nếu là reorder, in text hướng dẫn.
-    document.getElementById('q-text').innerText = q.qType === 'reorder' ? "Chạm vào các từ màu xanh để ghép thành câu hoàn chỉnh:" : q.qText;
+    document.getElementById('q-text').innerText = q.qType === 'reorder' ? "Chạm vào các khối chữ để ghép thành câu hoàn chỉnh:" : q.qText;
     
     const interactZone = document.getElementById('interactive-zone');
     interactZone.innerHTML = '';
@@ -490,14 +678,12 @@ function loadQuestion(index) {
         q.options.forEach(optText => {
             let btn = document.createElement('button');
             btn.className = 'mcq-opt';
-            // Không gỡ dấu chấm ở phần A. B. C. D. để giữ format cho đẹp
             btn.innerText = optText; 
             btn.onclick = () => selectMCQ(btn);
             grid.appendChild(btn);
         });
         interactZone.appendChild(grid);
     } else if (q.qType === 'reorder') {
-        // Tách câu bằng các khoảng trắng hoặc dấu gạch chéo
         let words = q.qText.split(/[\/\s]+/).filter(w => w.trim().length > 0);
         reorderState.pool = words;
         reorderState.answer = [];
@@ -520,7 +706,6 @@ function loadQuestion(index) {
         renderWordChips();
     }
 
-    // Ẩn/Hiện nút Submit
     document.getElementById('btn-check').style.display = userProgress.status[index] ? 'none' : 'inline-block';
     syncUI();
 }
@@ -568,8 +753,7 @@ function checkAnswer() {
     if (q.qType === 'mcq') {
         const selected = document.querySelector('.mcq-opt.selected');
         if (!selected) { alert("Em hãy click chọn 1 đáp án trước khi Kiểm tra nhé!"); return; }
-        // Lấy ký tự A, B, C, D
-        userAnswer = selected.innerText.split('.')[0].trim();
+        userAnswer = selected.innerText.split(' ')[0].trim(); // Lấy chữ A B C D đầu tiên
     } else if (q.qType === 'reorder') {
         if (reorderState.pool.length > 0) { alert("Em phải xếp hết các từ vào khung xám bên trên nhé!"); return; }
         userAnswer = reorderState.answer.join(' ');
@@ -577,7 +761,6 @@ function checkAnswer() {
 
     userProgress.tries[currentIndex]++;
     
-    // Loose matching: Chỉ lấy các ký tự là CHỮ và SỐ để so sánh (không quan tâm khoảng trắng, viết hoa hay dấu câu)
     let isCorrect = false;
     if(q.qType === 'mcq') {
         isCorrect = userAnswer.toUpperCase() === q.correctAns.toUpperCase();
@@ -590,10 +773,10 @@ function checkAnswer() {
     if (isCorrect) {
         userProgress.status[currentIndex] = true;
         syncUI();
-        showFeedbackPopup(true, "Giải thích: " + q.explainText);
+        showFeedbackPopup(true, "Lý thuyết: " + q.explainText);
     } else {
         userProgress.mistakes[currentIndex].push(userAnswer);
-        let errorMsg = `<b>Gợi ý & Lý thuyết:</b><br>${q.explainText}<br><br><i>Em hãy đọc kỹ lại và sửa lỗi nhé!</i>`;
+        let errorMsg = `<b>Gợi ý:</b><br>${q.explainText}<br><br><i>Em hãy đọc kỹ lại và sửa lỗi nhé!</i>`;
         showFeedbackPopup(false, errorMsg);
     }
 }
@@ -640,7 +823,6 @@ function showFeedbackPopup(isSuccess, msgHtml) {
 function closePopup() {
     document.getElementById('popup-overlay').style.display = 'none';
     if (userProgress.status[currentIndex]) {
-        // Tự động tìm câu chưa làm tiếp theo
         let nextIdx = userProgress.status.indexOf(false);
         if (nextIdx !== -1) loadQuestion(nextIdx);
         else showReport();
